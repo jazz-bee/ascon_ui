@@ -1,0 +1,6 @@
+# Creado con pip freeze > requirements.txt
+#librerias
+customtkinter==5.2.1
+#extras
+darkdetect==0.8.0
+typing_extensions==4.7.1

@@ -1,4 +1,6 @@
 # Creado con pip freeze > requirements.txt
+# python==3.12.1
+
 #librerias
 customtkinter==5.2.1
 #extras

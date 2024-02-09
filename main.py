@@ -1,145 +1,232 @@
+from timeit import default_timer as timer
 import customtkinter as ct
 from algoritmos import ascon
-import tkinter.font as TkFont
-
-# Setear apariencia y colores
-ct.set_appearance_mode("dark")  # Modos: system (default), light, dark
-ct.set_default_color_theme("dark-blue")  # Temas: blue, dark-blue, green
+from textbox import Textbox
 
 
-class AppWindow(ct.CTk):  # hereda de Ctk, AppWindow es una customtkinter window
+class AppWindow(ct.CTk):
     def __init__(self):
         super().__init__()
 
         # Config
         self.title("Criptografia - ASCON App")
-        self.geometry(f"{1100}x{580}")
-        self.minsize(1100, 580)  # minimo para achicar ventana
-        self.grid_columnconfigure(1, weight=1)
-        self.grid_rowconfigure((0, 1), weight=1)
+        self.window_config()
 
         # Sidebar Frame
-        self.sidebar_frame = ct.CTkFrame(self, width=140, corner_radius=0)
+        self.sidebar_frame = ct.CTkFrame(
+            master=self, width=140, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, rowspan=5, sticky="nsew")
-        self.sidebar_frame.grid_rowconfigure(4, weight=1)
         self.logo_label = ct.CTkLabel(
             self.sidebar_frame, text="ASCON", font=ct.CTkFont(size=30, weight="bold"))
         self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
 
-        self.sidebar_button_1 = ct.CTkButton(
-            self.sidebar_frame, text="Demo", command=self.sidebar_button1_event)
-        self.sidebar_button_1.grid(row=1, column=0, padx=20, pady=10)
-        self.sidebar_button_2 = ct.CTkButton(
-            self.sidebar_frame, text="AEAD", command=self.sidebar_button2_event)
-        self.sidebar_button_2.grid(row=2, column=0, padx=20, pady=10)
-        self.sidebar_button_3 = ct.CTkButton(
-            self.sidebar_frame, text="Reiniciar", command=self.sidebar_button3_event)
-        self.sidebar_button_3.grid(row=3, column=0, padx=20, pady=10)
+        self.demo_button = ct.CTkButton(
+            self.sidebar_frame, text="Demo", command=self.mostrar_demo).grid(row=1, column=0, padx=20, pady=10)
+
+        self.aead_button = ct.CTkButton(
+            self.sidebar_frame, text="AEAD", command=self.mostrar_aead).grid(row=2, column=0, padx=20, pady=10)
+
+        self.restart_button = ct.CTkButton(
+            self.sidebar_frame, text="Reiniciar", command=self.restart_textbox).grid(row=3, column=0, padx=20, pady=10)
 
         # Textbox
-        self.textbox = ct.CTkTextbox(
-            self, border_width=2, font=ct.CTkFont(family="Courier New"))
-        # use monospaced font (Courier New is available in  mac and windows)
-        self.textbox.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
-        self.restart_textbox()
+        self.results_textbox = Textbox(self)
+        self.results_textbox.grid(row=0, column=1,  padx=20,
+                                  pady=20, sticky="nsew")
+        self.results_textbox.restart()
 
-        # Entry texto plano
-        self.entry_var = ct.StringVar()
-        self.entry = ct.CTkEntry(master=self, placeholder_text="Texto plano",
-                                 textvariable=self.entry_var)
-        self.entry.grid(row=2, column=1, padx=20, pady=20, sticky="nsew")
+        # input frame
+        self.input_frame = ct.CTkFrame(self, corner_radius=0)
+        self.input_frame.grid(row=1, column=1, rowspan=5, sticky="nsew")
+        self.input_frame.grid_rowconfigure(4, weight=1)
+        self.input_frame.grid_columnconfigure(1, weight=1)
+
+        # Entry plaintext
+        self.entry_pt = ct.CTkEntry(
+            self.input_frame, placeholder_text="Texto plano")
+        self.entry_pt.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
 
         # Entry associated data
-        self.entry_var2 = ct.StringVar()
-        self.entry2 = ct.CTkEntry(master=self, placeholder_text="Data asociada",
-                                  textvariable=self.entry_var2)
-        self.entry2.grid(row=3, column=1, padx=20, pady=20, sticky="nsew")
+        self.entry_ad = ct.CTkEntry(
+            self.input_frame, placeholder_text="Datos asociados")
+        self.entry_ad.grid(row=3, column=1, padx=20, pady=20, sticky="nsew")
 
-#
-        self.check_var = ct.StringVar(value="on")
-        self.checkbox = ct.CTkCheckBox(master=self, text="Mostrar resultado", command=self.checkbox_event,
-                                       variable=self.check_var, onvalue="on", offvalue="off")
-        self.checkbox.grid(row=3, column=0, padx=20, pady=20, sticky="ew")
+        # Botones Cifrar y Descifrar
+        self.encrypt_button = ct.CTkButton(
+            master=self, text="Cifrar", command=self.button_function_encrypt)
+        self.encrypt_button.grid(
+            row=2, column=2, padx=20, pady=20, sticky="ew")
 
-        self.button = ct.CTkButton(
-            master=self, text="Cifrar", command=self.button_function)
-        self.button.grid(row=2, column=2, padx=20, pady=20, sticky="ew")
+        self.decrypt_button = ct.CTkButton(
+            master=self, text="Descifrar", command=self.button_function_decrypt)
+        self.decrypt_button.grid(
+            row=3, column=2, padx=20, pady=20, sticky="ew")
 
-        self.button2 = ct.CTkButton(
-            master=self, text="Descifrar", command=self.button_function)
-        self.button2.grid(row=3, column=2, padx=20, pady=20, sticky="ew")
+        # Tab
+        self.tabview = ct.CTkTabview(self, width=250)
+        self.tabview.grid(row=0, column=2, rowspan=2, padx=(
+            20, 0), pady=(20, 0), sticky="nsew")
+        self.tabview.add("Entradas")
+        self.tabview.tab("Entradas").grid_columnconfigure(
+            0, weight=1)
+
+        # Seleccionar variante
+        self.optionmenu_variant = ct.CTkOptionMenu(self.tabview.tab("Entradas"),
+                                                   values=["Ascon-128", "Ascon-128a", "Ascon-80pq"])
+        self.optionmenu_variant.grid(row=0, column=0, padx=20, pady=(20, 10))
+        # Generar random key
+        self.buttonkey = ct.CTkButton(
+            self.tabview.tab("Entradas"), text="Key", command=self.button_function_key
+        )
+        self.buttonkey.grid(row=1, column=0, padx=20, pady=20, sticky="ew")
+        # Generar random nonce
+        self.buttonnonce = ct.CTkButton(
+            self.tabview.tab("Entradas"), text="Nonce", command=self.button_function_nonce
+        )
+        self.buttonnonce.grid(row=2, column=0, padx=20, pady=20, sticky="ew")
 
     # Methods
 
+    def window_config(self):
+        self.geometry(f"{1100}x{580}")
+        self.minsize(1100, 580)
+
+        # Set grid
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+
+        # Set appearance and theme color
+        ct.set_appearance_mode("light")  # Modes: system (default), light, dark
+        ct.set_default_color_theme("dark-blue")
+
     def encrypt(self):
         try:
-            a = int(self.entry_var.get())
-            b = 2
-            c = a ^ b  # apply XOR
-            if self.check_var.get() == 'on':
-                self.textbox.insert(
-                    "0.0", "Resultado de aplicar " + str(a)+" XOR "+str(b)+" es: "+str(c)+"\n")
-        except ValueError:  # XOR solo opera con int o bool
-            self.textbox.insert("0.0", "Error ingrese un INT \n")
-            return None
 
-    def button_function(self):
-        print("button pressed")  # debug
+            variant = self.optionmenu_variant.get()
+
+            key = self.key
+            nonce = self.nonce
+            plaintext = self.entry_pt.get().encode()  # encode string to bytes object
+            associateddata = self.entry_ad.get().encode()
+
+            start_time = timer()
+            self.ciphertext = ascon.ascon_encrypt(
+                key, nonce, associateddata, plaintext,  variant)
+            end_time = timer()
+            self.results_textbox.add_title(f"CIFRADO: {variant}")
+
+            self.result_print([("key", key),
+                               ("nonce", nonce),
+                               ("plaintext", plaintext),
+                               ("ad", associateddata),
+                               ("ciphertext", self.ciphertext[:-16]),
+                               ("tag", self.ciphertext[-16:]),
+                               ])
+            self.entry_pt.delete(0, 'end')
+            self.results_textbox.insert_line(f"Tamaño en bytes de salida: {
+                len(self.ciphertext)}")
+            self.results_textbox.insert_line(f"Tiempo en segundos: {
+                end_time-start_time}")
+        except AttributeError:
+            self.results_textbox.insert_line(
+                "Error: faltan variables: key / nonce")
+
+    def decrypt(self):
+        try:
+
+            variant = self.optionmenu_variant.get()
+            key = self.key
+            nonce = self.nonce
+
+            associateddata = self.entry_ad.get().encode()
+            start_time = timer()
+            receivedplaintext = ascon.ascon_decrypt(
+                key, nonce, associateddata, self.ciphertext, variant)
+            end_time = timer()
+
+            self.results_textbox.add_title(f"DESCIFRADO: {variant}")
+
+            if receivedplaintext == None:
+                self.results_textbox.insert_line(
+                    "No se pudo descifrar el mensaje")
+            else:
+                self.result_print([("received", receivedplaintext),])
+                self.results_textbox.insert_line(f"Tiempo en segundos: {
+                    end_time-start_time}")
+        except AttributeError:
+            self.results_textbox.insert_line(
+                "Error: falta el texto cifrado")
+
+    def button_function_encrypt(self):
         self.encrypt()
 
-    def checkbox_event(self):
-        print("checkbox toggled, current value:",
-              self.check_var.get())  # debug
+    def button_function_decrypt(self):
+        self.decrypt()
 
-    def sidebar_button1_event(self):
-        # Demo aead
+    def mostrar_demo(self):
+
         variant = "Ascon-128"
         keysize = 20 if variant == "Ascon-80pq" else 16
-        key = ascon.get_random_bytes(keysize)  # zero_bytes(keysize)
-        nonce = ascon.get_random_bytes(16)      # zero_bytes(16)
-
-        associateddata = b"ASCON"
+        key = ascon.get_random_bytes(keysize)
+        nonce = ascon.get_random_bytes(16)
         plaintext = b"ascon"
+        associateddata = b"ASCON"
+
         ciphertext = ascon.ascon_encrypt(
             key, nonce, associateddata, plaintext,  variant)
         receivedplaintext = ascon.ascon_decrypt(
             key, nonce, associateddata, ciphertext, variant)
 
+        self.results_textbox.add_title(f"DEMO con {variant}")
+
         if receivedplaintext == None:
-            print("verification failed!")
+            self.results_textbox.insert_line("verification failed!")
+        self.results_textbox.insert_line(f"El resultado de cifrar el texto plano= {
+            plaintext.decode()}, con AD= {associateddata.decode()} ")
+        self.results_textbox.insert_line(
+            "Mostrando los valores de las variables en hexadecimal y su tamaño en bytes")
+        self.result_print([("key", key),
+                           ("nonce", nonce),
+                           ("plaintext", plaintext),
+                           ("ad", associateddata),
+                           ("ciphertext", ciphertext[:-16]),
+                           ("tag", ciphertext[-16:]),
+                           ("received", receivedplaintext),
+                           ])
 
-        print("=== demo con {variant} ===".format(
-            variant=variant))  # debug
-        self.demo_print([("key", key),
-                         ("nonce", nonce),
-                         ("plaintext", plaintext),
-                         ("ad", associateddata),
-                         ("ciphertext", ciphertext[:-16]),
-                         ("tag", ciphertext[-16:]),
-                         ("received", receivedplaintext),
-                         ])
-
-    def demo_print(self, data):
+    def result_print(self, data):
         maxlen = max([len(text) for (text, val) in data])
-        self.update_textbox("=== Demo ===")
         for text, val in data:
-            self.textbox.insert(
-                "end", "{text}:{align} 0x{val} ({length} bytes)\n".format(text=text, align=(
-                    (maxlen - len(text)) * " "), val=ascon.bytes_to_hex(val), length=len(val)))
+            self.results_textbox.insert_line("{text}:{align} 0x{val} ({length} bytes)".format(text=text, align=(
+                (maxlen - len(text)) * " "), val=ascon.bytes_to_hex(val), length=len(val)))
 
-    def sidebar_button2_event(self):
-        print("sidebar_button click")  # debug
-
-    def sidebar_button3_event(self):
-        self.restart_textbox()
-
-    def update_textbox(self, text):
-        self.textbox.insert("end", "\n{text}\n".format(text=text))
+    def mostrar_aead(self):
+        self.results_textbox.add_title("AEAD")
 
     def restart_textbox(self):
-        self.textbox.delete("0.0", "end")  # delete all text
-        self.textbox.insert(
-            "0.0", "Implementación de Ascon v1.2 - http://ascon.iaik.tugraz.at/ \n")
+        self.results_textbox.restart()
+        # restart variables #TODO
+
+    def button_function_key(self):
+        self.generate_random_key()
+        key_in_hex = ascon.bytes_to_hex(self.key)
+        self.results_textbox.insert_line(f"Key generado:  0x{key_in_hex}")
+
+    def generate_random_key(self):
+        variant = self.optionmenu_variant.get()
+        keysize = 20 if variant == "Ascon-80pq" else 16
+        self.key = ascon.get_random_bytes(keysize)  # TODO cambiar self.key
+
+    def button_function_nonce(self):
+        self.generate_random_nonce()
+        nonce_in_hex = ascon.bytes_to_hex(self.nonce)
+        self.results_textbox.insert_line(f"Nonce generado:  0x{nonce_in_hex}")
+
+    def generate_random_nonce(self):
+        self.nonce = ascon.get_random_bytes(16)  # zero_bytes(16)
+
+    def button_function(self):
+        self.encrypt()
 
 
 app = AppWindow()

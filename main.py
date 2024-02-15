@@ -1,7 +1,7 @@
-from timeit import default_timer as timer
 import customtkinter as ct
 from algoritmos import ascon
 from textbox import Textbox
+from utils.timing import measure_execution_time
 
 
 class AppWindow(ct.CTk):
@@ -109,10 +109,9 @@ class AppWindow(ct.CTk):
             plaintext = self.entry_pt.get().encode()  # encode string to bytes object
             associateddata = self.entry_ad.get().encode()
 
-            start_time = timer()
-            self.ciphertext = ascon.ascon_encrypt(
-                key, nonce, associateddata, plaintext,  variant)
-            end_time = timer()
+            self.ciphertext, execution_time = measure_execution_time(ascon.ascon_encrypt,
+                                                                     key, nonce, associateddata, plaintext,  variant)
+
             self.results_textbox.add_title(f"CIFRADO: {variant}")
 
             self.result_print([("key", key),
@@ -126,7 +125,7 @@ class AppWindow(ct.CTk):
             self.results_textbox.insert_line(f"Tamaño en bytes de salida: {
                 len(self.ciphertext)}")
             self.results_textbox.insert_line(f"Tiempo en segundos: {
-                end_time-start_time}")
+                execution_time}")
         except AttributeError:
             self.results_textbox.insert_line(
                 "Error: faltan variables: key / nonce")
@@ -139,10 +138,8 @@ class AppWindow(ct.CTk):
             nonce = self.nonce
 
             associateddata = self.entry_ad.get().encode()
-            start_time = timer()
-            receivedplaintext = ascon.ascon_decrypt(
-                key, nonce, associateddata, self.ciphertext, variant)
-            end_time = timer()
+            receivedplaintext, execution_time = measure_execution_time(ascon.ascon_decrypt,
+                                                                       key, nonce, associateddata, self.ciphertext, variant)
 
             self.results_textbox.add_title(f"DESCIFRADO: {variant}")
 
@@ -152,7 +149,7 @@ class AppWindow(ct.CTk):
             else:
                 self.result_print([("received", receivedplaintext),])
                 self.results_textbox.insert_line(f"Tiempo en segundos: {
-                    end_time-start_time}")
+                    execution_time}")
         except AttributeError:
             self.results_textbox.insert_line(
                 "Error: falta el texto cifrado")

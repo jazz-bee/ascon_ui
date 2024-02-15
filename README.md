@@ -1,6 +1,6 @@
 # ascon_ui
 ## Descripcion
-Herramienta para estudiar y probar ASCON. Ascon es una familia de algoritmos de cifrado autenticado y de hashing diseñado para ser "lightweight" y facil de implementar
+Aplicacion eduactiva de escritorio para probar ASCON. Ascon es una familia de algoritmos de cifrado autenticado y de hashing diseñado para ser "lightweight" y facil de implementar.
 Mas informacion en https://ascon.iaik.tugraz.at/specification.html 
 
 
@@ -28,4 +28,9 @@ $# source venv/bin/activate
 ### 2) Instalar dependencias (paquetes requeridos para el proyecto y sus versiones)
 ```
 pip3 install -r requirements.txt 
+```
+
+### 3) Tests
+```
+python3 -m unittest
 ```

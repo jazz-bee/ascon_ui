@@ -1,12 +1,13 @@
 import customtkinter as ct
-from algoritmos import ascon
-from textbox import Textbox
-from utils.timing import measure_execution_time
+from UI.textbox import Textbox
+from cipher import AsconCipher
 
 
 class AppWindow(ct.CTk):
     def __init__(self):
         super().__init__()
+
+        self.ascon_cipher = AsconCipher()
 
         # Config
         self.title("Criptografia - ASCON App")
@@ -109,8 +110,8 @@ class AppWindow(ct.CTk):
             plaintext = self.entry_pt.get().encode()  # encode string to bytes object
             associateddata = self.entry_ad.get().encode()
 
-            self.ciphertext, execution_time = measure_execution_time(ascon.ascon_encrypt,
-                                                                     key, nonce, associateddata, plaintext,  variant)
+            self.ciphertext, execution_time = self.ascon_cipher.encrypt(
+                key, nonce, associateddata, plaintext, variant)
 
             self.results_textbox.add_title(f"CIFRADO: {variant}")
 
@@ -138,8 +139,8 @@ class AppWindow(ct.CTk):
             nonce = self.nonce
 
             associateddata = self.entry_ad.get().encode()
-            receivedplaintext, execution_time = measure_execution_time(ascon.ascon_decrypt,
-                                                                       key, nonce, associateddata, self.ciphertext, variant)
+            receivedplaintext, execution_time = self.ascon_cipher.decrypt(
+                key, nonce, associateddata, self.ciphertext, variant)
 
             self.results_textbox.add_title(f"DESCIFRADO: {variant}")
 

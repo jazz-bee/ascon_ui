@@ -8,6 +8,7 @@ class AppWindow(ct.CTk):
         super().__init__()
 
         self.ascon_cipher = AsconCipher()
+        self.key = 0
 
         # Config
         self.title("Criptografia - ASCON App")
@@ -101,20 +102,22 @@ class AppWindow(ct.CTk):
         ct.set_default_color_theme("dark-blue")
 
     def encrypt(self):
+        if not self.key or not self.nonce:
+            self.results_textbox.insert_line(
+                "Error: Key or nonce not generated.")
+            return
+
         try:
-
-            variant = self.optionmenu_variant.get()
-
             key = self.key
             nonce = self.nonce
+            variant = self.optionmenu_variant.get()
             plaintext = self.entry_pt.get().encode()  # encode string to bytes object
             associateddata = self.entry_ad.get().encode()
 
-            self.ciphertext, execution_time = self.ascon_cipher.encrypt(
-                key, nonce, associateddata, plaintext, variant)
+            self.ciphertext, execution_time = self.ascon_cipher.encrypt_and_measure_time(
+                self.key, self.nonce, associateddata, plaintext, variant)
 
             self.results_textbox.add_title(f"CIFRADO: {variant}")
-
             self.result_print([("key", key),
                                ("nonce", nonce),
                                ("plaintext", plaintext),
@@ -127,9 +130,8 @@ class AppWindow(ct.CTk):
                 len(self.ciphertext)}")
             self.results_textbox.insert_line(f"Tiempo en segundos: {
                 execution_time}")
-        except AttributeError:
-            self.results_textbox.insert_line(
-                "Error: faltan variables: key / nonce")
+        except Exception as e:
+            self.results_textbox.insert_line(f"Error during encryption: {e}")
 
     def decrypt(self):
         try:
@@ -139,7 +141,7 @@ class AppWindow(ct.CTk):
             nonce = self.nonce
 
             associateddata = self.entry_ad.get().encode()
-            receivedplaintext, execution_time = self.ascon_cipher.decrypt(
+            receivedplaintext, execution_time = self.ascon_cipher.decrypt_and_measure_time(
                 key, nonce, associateddata, self.ciphertext, variant)
 
             self.results_textbox.add_title(f"DESCIFRADO: {variant}")
@@ -165,14 +167,14 @@ class AppWindow(ct.CTk):
 
         variant = "Ascon-128"
         keysize = 20 if variant == "Ascon-80pq" else 16
-        key = ascon.get_random_bytes(keysize)
-        nonce = ascon.get_random_bytes(16)
+        key = self.ascon_cipher.get_random_key(keysize)
+        nonce = self.ascon_cipher.get_random_nonce(16)
         plaintext = b"ascon"
         associateddata = b"ASCON"
 
-        ciphertext = ascon.ascon_encrypt(
+        ciphertext = self.ascon_cipher.encrypt(
             key, nonce, associateddata, plaintext,  variant)
-        receivedplaintext = ascon.ascon_decrypt(
+        receivedplaintext = self.ascon_cipher.decrypt(
             key, nonce, associateddata, ciphertext, variant)
 
         self.results_textbox.add_title(f"DEMO con {variant}")
@@ -196,7 +198,7 @@ class AppWindow(ct.CTk):
         maxlen = max([len(text) for (text, val) in data])
         for text, val in data:
             self.results_textbox.insert_line("{text}:{align} 0x{val} ({length} bytes)".format(text=text, align=(
-                (maxlen - len(text)) * " "), val=ascon.bytes_to_hex(val), length=len(val)))
+                (maxlen - len(text)) * " "), val=self.ascon_cipher.bytes_to_hex(val), length=len(val)))
 
     def mostrar_aead(self):
         self.results_textbox.add_title("AEAD")
@@ -207,21 +209,22 @@ class AppWindow(ct.CTk):
 
     def button_function_key(self):
         self.generate_random_key()
-        key_in_hex = ascon.bytes_to_hex(self.key)
+        key_in_hex = self.ascon_cipher.bytes_to_hex(self.key)
         self.results_textbox.insert_line(f"Key generado:  0x{key_in_hex}")
 
     def generate_random_key(self):
         variant = self.optionmenu_variant.get()
         keysize = 20 if variant == "Ascon-80pq" else 16
-        self.key = ascon.get_random_bytes(keysize)  # TODO cambiar self.key
+        self.key = self.ascon_cipher.get_random_key(
+            keysize)  # TODO cambiar self.key
 
     def button_function_nonce(self):
         self.generate_random_nonce()
-        nonce_in_hex = ascon.bytes_to_hex(self.nonce)
+        nonce_in_hex = self.ascon_cipher.bytes_to_hex(self.nonce)
         self.results_textbox.insert_line(f"Nonce generado:  0x{nonce_in_hex}")
 
     def generate_random_nonce(self):
-        self.nonce = ascon.get_random_bytes(16)  # zero_bytes(16)
+        self.nonce = self.ascon_cipher.get_random_nonce(16)  # zero_bytes(16)
 
     def button_function(self):
         self.encrypt()

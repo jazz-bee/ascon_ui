@@ -9,6 +9,8 @@ class AppWindow(ct.CTk):
 
         self.ascon_cipher = AsconCipher()
         self.key = 0
+        self.ciphertext = None
+        self.received_plaintext = None
 
         # Config
         self.title("Criptografia - ASCON App")
@@ -23,13 +25,10 @@ class AppWindow(ct.CTk):
         self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
 
         self.demo_button = ct.CTkButton(
-            self.sidebar_frame, text="Demo", command=self.mostrar_demo).grid(row=1, column=0, padx=20, pady=10)
+            self.sidebar_frame, text="Demo", command=self.handle_demo).grid(row=1, column=0, padx=20, pady=10)
 
         self.aead_button = ct.CTkButton(
-            self.sidebar_frame, text="AEAD", command=self.mostrar_aead).grid(row=2, column=0, padx=20, pady=10)
-
-        self.restart_button = ct.CTkButton(
-            self.sidebar_frame, text="Reiniciar", command=self.restart_textbox).grid(row=3, column=0, padx=20, pady=10)
+            self.sidebar_frame, text="AEAD", command=self.handle_aead).grid(row=2, column=0, padx=20, pady=10)
 
         # Textbox
         self.results_textbox = Textbox(self)
@@ -55,12 +54,12 @@ class AppWindow(ct.CTk):
 
         # Botones Cifrar y Descifrar
         self.encrypt_button = ct.CTkButton(
-            master=self, text="Cifrar", command=self.button_function_encrypt)
+            master=self, text="Cifrar", command=self.handle_encrypt)
         self.encrypt_button.grid(
             row=2, column=2, padx=20, pady=20, sticky="ew")
 
         self.decrypt_button = ct.CTkButton(
-            master=self, text="Descifrar", command=self.button_function_decrypt)
+            master=self, text="Descifrar", command=self.handle_decrypt)
         self.decrypt_button.grid(
             row=3, column=2, padx=20, pady=20, sticky="ew")
 
@@ -101,98 +100,97 @@ class AppWindow(ct.CTk):
         ct.set_appearance_mode("light")  # Modes: system (default), light, dark
         ct.set_default_color_theme("dark-blue")
 
-    def encrypt(self):
+    def gather_encryption_parameters(self):
+        # create a dict with the input parameters
+        return {
+            "key": self.key,
+            "nonce": self.nonce,
+            "plaintext": self.entry_pt.get().encode(),  # encode string to bytes object
+            "associated_data": self.entry_ad.get().encode(),
+            "variant": self.optionmenu_variant.get(),
+        }
+
+    def display_results(self, params, ciphertext, execution_time):
+        # Title depending on variant
+        self.results_textbox.add_title(f"ENCRYPTION: {params['variant']}")
+
+        # Print the input params and ascon output
+        self.result_print([
+            ("key", params['key']),
+            ("nonce", params['nonce']),
+            ("plaintext", params['plaintext']),
+            ("associated data", params['associated_data']),
+            # Exclude the tag from ciphertext
+            ("ciphertext", ciphertext[:-16]),
+            ("tag", ciphertext[-16:])  # Last 16 bytes are the tag
+        ])
+
+        # Show the size of the output and the execution time
+        self.results_textbox.insert_line(
+            f"Output size (bytes): {len(ciphertext)}")
+        self.results_textbox.insert_line(
+            f"Execution time (seconds): {execution_time}")
+
+    def handle_encrypt(self):
         if not self.key or not self.nonce:
             self.results_textbox.insert_line(
                 "Error: Key or nonce not generated.")
             return
 
         try:
-            key = self.key
-            nonce = self.nonce
-            variant = self.optionmenu_variant.get()
-            plaintext = self.entry_pt.get().encode()  # encode string to bytes object
-            associateddata = self.entry_ad.get().encode()
+            params = self.gather_encryption_parameters()
 
             self.ciphertext, execution_time = self.ascon_cipher.encrypt_and_measure_time(
-                self.key, self.nonce, associateddata, plaintext, variant)
+                params['key'], params['nonce'], params['associated_data'], params['plaintext'], params['variant'])
 
-            self.results_textbox.add_title(f"CIFRADO: {variant}")
-            self.result_print([("key", key),
-                               ("nonce", nonce),
-                               ("plaintext", plaintext),
-                               ("ad", associateddata),
-                               ("ciphertext", self.ciphertext[:-16]),
-                               ("tag", self.ciphertext[-16:]),
-                               ])
-            self.entry_pt.delete(0, 'end')
-            self.results_textbox.insert_line(f"Tamaño en bytes de salida: {
-                len(self.ciphertext)}")
-            self.results_textbox.insert_line(f"Tiempo en segundos: {
-                execution_time}")
+            self.display_results(params, self.ciphertext, execution_time)
         except Exception as e:
             self.results_textbox.insert_line(f"Error during encryption: {e}")
 
-    def decrypt(self):
+    def handle_decrypt(self):
+        # Gather parameters in a dictionary
         try:
+            decrypt_params = {
+                "key": self.key,
+                "nonce": self.nonce,
+                "associated_data": self.entry_ad.get().encode(),
+                "ciphertext": self.ciphertext,
+                "variant": self.optionmenu_variant.get()
+            }
+            if not hasattr(self, 'ciphertext'):
+                raise AttributeError(
+                    "Ciphertext is not available for decryption.")
 
-            variant = self.optionmenu_variant.get()
-            key = self.key
-            nonce = self.nonce
+            self.received_plaintext, execution_time = self.ascon_cipher.decrypt_and_measure_time(
+                decrypt_params["key"],
+                decrypt_params["nonce"],
+                decrypt_params["associated_data"],
+                decrypt_params["ciphertext"],
+                decrypt_params["variant"]
+            )
 
-            associateddata = self.entry_ad.get().encode()
-            receivedplaintext, execution_time = self.ascon_cipher.decrypt_and_measure_time(
-                key, nonce, associateddata, self.ciphertext, variant)
+            self.display_decryption_results(decrypt_params,
+                                            self.received_plaintext, execution_time)
 
-            self.results_textbox.add_title(f"DESCIFRADO: {variant}")
-
-            if receivedplaintext == None:
-                self.results_textbox.insert_line(
-                    "No se pudo descifrar el mensaje")
-            else:
-                self.result_print([("received", receivedplaintext),])
-                self.results_textbox.insert_line(f"Tiempo en segundos: {
-                    execution_time}")
         except AttributeError:
             self.results_textbox.insert_line(
                 "Error: falta el texto cifrado")
 
-    def button_function_encrypt(self):
-        self.encrypt()
+    def display_decryption_results(self, params, received_plaintext, execution_time):
+        self.results_textbox.add_title(
+            f"DECRYPT: {params['variant']}")
 
-    def button_function_decrypt(self):
-        self.decrypt()
+        if received_plaintext is None:
+            self.results_textbox.insert_line("It was not possible to decipher")
+        else:
+            self.result_print([("Received", self.received_plaintext),])
+            self.results_textbox.insert_line(
+                f"Received plaintext: {received_plaintext.decode()}")
+            self.results_textbox.insert_line(
+                f"Time taken: {execution_time:.6f} seconds")
 
-    def mostrar_demo(self):
-
-        variant = "Ascon-128"
-        keysize = 20 if variant == "Ascon-80pq" else 16
-        key = self.ascon_cipher.get_random_key(keysize)
-        nonce = self.ascon_cipher.get_random_nonce(16)
-        plaintext = b"ascon"
-        associateddata = b"ASCON"
-
-        ciphertext = self.ascon_cipher.encrypt(
-            key, nonce, associateddata, plaintext,  variant)
-        receivedplaintext = self.ascon_cipher.decrypt(
-            key, nonce, associateddata, ciphertext, variant)
-
-        self.results_textbox.add_title(f"DEMO con {variant}")
-
-        if receivedplaintext == None:
-            self.results_textbox.insert_line("verification failed!")
-        self.results_textbox.insert_line(f"El resultado de cifrar el texto plano= {
-            plaintext.decode()}, con AD= {associateddata.decode()} ")
-        self.results_textbox.insert_line(
-            "Mostrando los valores de las variables en hexadecimal y su tamaño en bytes")
-        self.result_print([("key", key),
-                           ("nonce", nonce),
-                           ("plaintext", plaintext),
-                           ("ad", associateddata),
-                           ("ciphertext", ciphertext[:-16]),
-                           ("tag", ciphertext[-16:]),
-                           ("received", receivedplaintext),
-                           ])
+    def handle_demo(self):
+        pass
 
     def result_print(self, data):
         maxlen = max([len(text) for (text, val) in data])
@@ -200,7 +198,7 @@ class AppWindow(ct.CTk):
             self.results_textbox.insert_line("{text}:{align} 0x{val} ({length} bytes)".format(text=text, align=(
                 (maxlen - len(text)) * " "), val=self.ascon_cipher.bytes_to_hex(val), length=len(val)))
 
-    def mostrar_aead(self):
+    def handle_aead(self):
         self.results_textbox.add_title("AEAD")
 
     def restart_textbox(self):

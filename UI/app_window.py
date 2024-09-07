@@ -1,5 +1,6 @@
 import customtkinter as ct
 from UI.textbox import Textbox
+from UI.sidebar import SidebarFrame
 from cipher import AsconCipher
 
 
@@ -17,18 +18,11 @@ class AppWindow(ct.CTk):
         self.window_config()
 
         # Sidebar Frame
-        self.sidebar_frame = ct.CTkFrame(
-            master=self, width=140, corner_radius=0)
+        self.sidebar_frame = SidebarFrame(master=self,
+                                          on_demo_click=self.handle_demo,
+                                          on_aead_click=self.handle_aead,
+                                          width=140, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, rowspan=5, sticky="nsew")
-        self.logo_label = ct.CTkLabel(
-            self.sidebar_frame, text="ASCON", font=ct.CTkFont(size=30, weight="bold"))
-        self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
-
-        self.demo_button = ct.CTkButton(
-            self.sidebar_frame, text="Demo", command=self.handle_demo).grid(row=1, column=0, padx=20, pady=10)
-
-        self.aead_button = ct.CTkButton(
-            self.sidebar_frame, text="AEAD", command=self.handle_aead).grid(row=2, column=0, padx=20, pady=10)
 
         # Textbox
         self.results_textbox = Textbox(self)
@@ -189,17 +183,18 @@ class AppWindow(ct.CTk):
             self.results_textbox.insert_line(
                 f"Time taken: {execution_time:.6f} seconds")
 
+    # Handlers for the sidebar button clicks
     def handle_demo(self):
-        pass
+        self.results_textbox.add_title("Demo")
+
+    def handle_aead(self):
+        self.results_textbox.add_title("AEAD")
 
     def result_print(self, data):
         maxlen = max([len(text) for (text, val) in data])
         for text, val in data:
             self.results_textbox.insert_line("{text}:{align} 0x{val} ({length} bytes)".format(text=text, align=(
                 (maxlen - len(text)) * " "), val=self.ascon_cipher.bytes_to_hex(val), length=len(val)))
-
-    def handle_aead(self):
-        self.results_textbox.add_title("AEAD")
 
     def restart_textbox(self):
         self.results_textbox.restart()

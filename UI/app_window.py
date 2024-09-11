@@ -1,15 +1,18 @@
 import customtkinter as ct
 from UI.textbox import Textbox
 from UI.sidebar import SidebarFrame
-from cipher import AsconCipher
+from controllers.ascon_controller import AsconController
 
 
 class AppWindow(ct.CTk):
     def __init__(self):
         super().__init__()
 
-        self.ascon_cipher = AsconCipher()
-        self.key = 0
+        self.ascon_controller = AsconController()
+
+        # initialize parameters
+        self.key = None
+        self.nonce = None
         self.ciphertext = None
         self.received_plaintext = None
 
@@ -20,15 +23,10 @@ class AppWindow(ct.CTk):
         # Sidebar Frame
         self.sidebar_frame = SidebarFrame(master=self,
                                           on_demo_click=self.handle_demo,
-                                          on_aead_click=self.handle_aead,
-                                          width=140, corner_radius=0)
-        self.sidebar_frame.grid(row=0, column=0, rowspan=5, sticky="nsew")
+                                          on_aead_click=self.handle_aead)
 
         # Textbox
         self.results_textbox = Textbox(self)
-        self.results_textbox.grid(row=0, column=1,  padx=20,
-                                  pady=20, sticky="nsew")
-        self.results_textbox.restart()
 
         # input frame
         self.input_frame = ct.CTkFrame(self, corner_radius=0)
@@ -71,12 +69,12 @@ class AppWindow(ct.CTk):
         self.optionmenu_variant.grid(row=0, column=0, padx=20, pady=(20, 10))
         # Generar random key
         self.buttonkey = ct.CTkButton(
-            self.tabview.tab("Entradas"), text="Key", command=self.button_function_key
+            self.tabview.tab("Entradas"), text="Key", command=self.handle_key_button
         )
         self.buttonkey.grid(row=1, column=0, padx=20, pady=20, sticky="ew")
         # Generar random nonce
         self.buttonnonce = ct.CTkButton(
-            self.tabview.tab("Entradas"), text="Nonce", command=self.button_function_nonce
+            self.tabview.tab("Entradas"), text="Nonce", command=self.handle_nonce_button
         )
         self.buttonnonce.grid(row=2, column=0, padx=20, pady=20, sticky="ew")
 
@@ -87,6 +85,7 @@ class AppWindow(ct.CTk):
         self.minsize(1100, 580)
 
         # Set grid
+        self.grid_columnconfigure(0, weight=0)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
@@ -94,7 +93,31 @@ class AppWindow(ct.CTk):
         ct.set_appearance_mode("light")  # Modes: system (default), light, dark
         ct.set_default_color_theme("dark-blue")
 
-    def gather_encryption_parameters(self):
+    def handle_encrypt(self):
+        # try:
+        params = self._gather_encryption_parameters()
+        self.ciphertext, execution_time = self.ascon_controller.encrypt_and_measure_time(
+            params)
+        self.display_encryption_results(
+            params, self.ciphertext, execution_time)
+        # except Exception as e:
+        #     print(f"Error during encryption - {e}")
+        #     # self.results_textbox.insert_line(f"Error during encryption - {e}")
+
+    def handle_decrypt(self):
+        try:
+            decrypt_params = self._gather_decryption_parameters()
+
+            self.received_plaintext, execution_time = self.ascon_controller.decrypt_and_measure_time(
+                decrypt_params)
+
+            self.display_decryption_results(
+                decrypt_params, self.received_plaintext, execution_time)
+
+        except Exception as e:
+            self.results_textbox.insert_line(f"Error during decryption -  {e}")
+
+    def _gather_encryption_parameters(self):
         # create a dict with the input parameters
         return {
             "key": self.key,
@@ -104,71 +127,35 @@ class AppWindow(ct.CTk):
             "variant": self.optionmenu_variant.get(),
         }
 
-    def display_results(self, params, ciphertext, execution_time):
+    def _gather_decryption_parameters(self):
+        return {
+            "key": self.key,
+            "nonce": self.nonce,
+            "associated_data": self.entry_ad.get().encode(),
+            "ciphertext": self.ciphertext,
+            "variant": self.optionmenu_variant.get()
+        }
+
+    def display_encryption_results(self, params, ciphertext, execution_time):
         # Title depending on variant
         self.results_textbox.add_title(f"ENCRYPTION: {params['variant']}")
 
         # Print the input params and ascon output
-        self.result_print([
-            ("key", params['key']),
-            ("nonce", params['nonce']),
-            ("plaintext", params['plaintext']),
-            ("associated data", params['associated_data']),
+        self._result_print([
+            ("Key", params['key']),
+            ("Nonce", params['nonce']),
+            ("Plaintext", params['plaintext']),
+            ("Associated data", params['associated_data']),
             # Exclude the tag from ciphertext
-            ("ciphertext", ciphertext[:-16]),
-            ("tag", ciphertext[-16:])  # Last 16 bytes are the tag
+            ("Ciphertext", ciphertext[:-16]),
+            ("Tag", ciphertext[-16:])  # Last 16 bytes are the tag
         ])
 
         # Show the size of the output and the execution time
         self.results_textbox.insert_line(
             f"Output size (bytes): {len(ciphertext)}")
         self.results_textbox.insert_line(
-            f"Execution time (seconds): {execution_time}")
-
-    def handle_encrypt(self):
-        if not self.key or not self.nonce:
-            self.results_textbox.insert_line(
-                "Error: Key or nonce not generated.")
-            return
-
-        try:
-            params = self.gather_encryption_parameters()
-
-            self.ciphertext, execution_time = self.ascon_cipher.encrypt_and_measure_time(
-                params['key'], params['nonce'], params['associated_data'], params['plaintext'], params['variant'])
-
-            self.display_results(params, self.ciphertext, execution_time)
-        except Exception as e:
-            self.results_textbox.insert_line(f"Error during encryption: {e}")
-
-    def handle_decrypt(self):
-        # Gather parameters in a dictionary
-        try:
-            decrypt_params = {
-                "key": self.key,
-                "nonce": self.nonce,
-                "associated_data": self.entry_ad.get().encode(),
-                "ciphertext": self.ciphertext,
-                "variant": self.optionmenu_variant.get()
-            }
-            if not hasattr(self, 'ciphertext'):
-                raise AttributeError(
-                    "Ciphertext is not available for decryption.")
-
-            self.received_plaintext, execution_time = self.ascon_cipher.decrypt_and_measure_time(
-                decrypt_params["key"],
-                decrypt_params["nonce"],
-                decrypt_params["associated_data"],
-                decrypt_params["ciphertext"],
-                decrypt_params["variant"]
-            )
-
-            self.display_decryption_results(decrypt_params,
-                                            self.received_plaintext, execution_time)
-
-        except AttributeError:
-            self.results_textbox.insert_line(
-                "Error: falta el texto cifrado")
+            f"Execution time (s): {execution_time}")
 
     def display_decryption_results(self, params, received_plaintext, execution_time):
         self.results_textbox.add_title(
@@ -177,11 +164,11 @@ class AppWindow(ct.CTk):
         if received_plaintext is None:
             self.results_textbox.insert_line("It was not possible to decipher")
         else:
-            self.result_print([("Received", self.received_plaintext),])
+            self._result_print([("Received", self.received_plaintext),])
             self.results_textbox.insert_line(
                 f"Received plaintext: {received_plaintext.decode()}")
             self.results_textbox.insert_line(
-                f"Time taken: {execution_time:.6f} seconds")
+                f"Execution time(s): {execution_time:.6f} ")
 
     # Handlers for the sidebar button clicks
     def handle_demo(self):
@@ -190,34 +177,28 @@ class AppWindow(ct.CTk):
     def handle_aead(self):
         self.results_textbox.add_title("AEAD")
 
-    def result_print(self, data):
+    def _result_print(self, data):
         maxlen = max([len(text) for (text, val) in data])
         for text, val in data:
             self.results_textbox.insert_line("{text}:{align} 0x{val} ({length} bytes)".format(text=text, align=(
-                (maxlen - len(text)) * " "), val=self.ascon_cipher.bytes_to_hex(val), length=len(val)))
+                (maxlen - len(text)) * " "), val=self.ascon_controller.bytes_to_hex(val), length=len(val)))
 
-    def restart_textbox(self):
-        self.results_textbox.restart()
-        # restart variables #TODO
-
-    def button_function_key(self):
-        self.generate_random_key()
-        key_in_hex = self.ascon_cipher.bytes_to_hex(self.key)
+    def handle_key_button(self):
+        self._generate_random_key()
+        key_in_hex = self.ascon_controller.bytes_to_hex(self.key)
         self.results_textbox.insert_line(f"Key generado:  0x{key_in_hex}")
 
-    def generate_random_key(self):
+    def _generate_random_key(self):
         variant = self.optionmenu_variant.get()
         keysize = 20 if variant == "Ascon-80pq" else 16
-        self.key = self.ascon_cipher.get_random_key(
+        self.key = self.ascon_controller.get_random_key(
             keysize)  # TODO cambiar self.key
 
-    def button_function_nonce(self):
-        self.generate_random_nonce()
-        nonce_in_hex = self.ascon_cipher.bytes_to_hex(self.nonce)
+    def handle_nonce_button(self):
+        self._generate_random_nonce()
+        nonce_in_hex = self.ascon_controller.bytes_to_hex(self.nonce)
         self.results_textbox.insert_line(f"Nonce generado:  0x{nonce_in_hex}")
 
-    def generate_random_nonce(self):
-        self.nonce = self.ascon_cipher.get_random_nonce(16)  # zero_bytes(16)
-
-    def button_function(self):
-        self.encrypt()
+    def _generate_random_nonce(self):
+        self.nonce = self.ascon_controller.get_random_nonce(
+            16)  # zero_bytes(16)

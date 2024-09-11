@@ -1,4 +1,4 @@
-from algoritmos import ascon
+from algorithms import ascon
 from utils.timing import measure_execution_time
 
 
@@ -18,15 +18,12 @@ class AsconController:
 
     def decrypt(self, params):
         self._validate_decryption_parameters(params)
-
         received_plaintext = ascon.ascon_decrypt(
             params['key'], params['nonce'], params['associated_data'], params['ciphertext'], params['variant'])
         return received_plaintext
 
     def decrypt_and_measure_time(self, params):
-
         self._validate_decryption_parameters(params)
-
         received_plaintext, execution_time = measure_execution_time(ascon.ascon_decrypt,
                                                                     params['key'], params['nonce'], params['associated_data'], params['ciphertext'], params['variant'])
         return received_plaintext, execution_time
@@ -39,7 +36,7 @@ class AsconController:
             'associated_data': bytes,
             'variant': str
         }
-        self.check_required_params(params, required_params)
+        self._check_required_params(params, required_params)
 
     def _validate_decryption_parameters(self, params):
         required_params = {
@@ -49,9 +46,9 @@ class AsconController:
             'associated_data': bytes,
             'variant': str
         }
-        self.check_required_params(params, required_params)
+        self._check_required_params(params, required_params)
 
-    def check_required_params(self, params, required_params):
+    def _check_required_params(self, params, required_params):
         for rp, expected_type in required_params.items():
             if rp not in params or params[rp] is None:
                 raise ValueError(

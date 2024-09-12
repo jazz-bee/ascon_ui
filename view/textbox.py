@@ -5,6 +5,7 @@ class Textbox(CTkTextbox):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs, border_width=2,
                          font=CTkFont(family="Courier New"), state="disabled")
+        self.grid(row=0, column=1,  padx=20, pady=20, sticky="nsew")
 
     def insert(self, index, text, tags=None):
         self.configure(state='normal')

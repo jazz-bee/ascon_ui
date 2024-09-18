@@ -17,7 +17,7 @@ class AppWindow(ct.CTk):
         self.received_plaintext = None
 
         # Config
-        self.title("Criptografia - ASCON App")
+        self.title("Lightweight Cryptography - ASCON UI")
         self.window_config()
 
         # Sidebar Frame

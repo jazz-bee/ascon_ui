@@ -79,15 +79,14 @@ class AppWindow(ct.CTk):
     def window_config(self):
         self.geometry(f"{1100}x{580}")
         self.minsize(1100, 580)
-
-        # Set grid
-        self.grid_columnconfigure(0, weight=0)
-        self.grid_columnconfigure(1, weight=1)
-        self.grid_rowconfigure(0, weight=1)
-
-        # Set appearance and theme color
-        ct.set_appearance_mode("light")  # Modes: system (default), light, dark
+        self._setup_grid()
+        ct.set_appearance_mode("light")
         ct.set_default_color_theme("dark-blue")
+
+    def _setup_grid(self):
+        self.grid_columnconfigure(0, weight=0, minsize=170)  # Sidebar
+        self.grid_columnconfigure(1, weight=1)  # Main Section
+        self.grid_rowconfigure(0, weight=1)  # Expands
 
     def handle_encrypt(self):
         try:

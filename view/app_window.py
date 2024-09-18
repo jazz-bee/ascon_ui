@@ -1,6 +1,7 @@
 import customtkinter as ct
 from view.textbox import Textbox
 from view.sidebar import SidebarFrame
+from view.main_section import MainSectionFrame
 from controllers.ascon_controller import AsconController
 
 
@@ -24,57 +25,63 @@ class AppWindow(ct.CTk):
         self.sidebar_frame = SidebarFrame(master=self,
                                           on_demo_click=self.handle_demo,
                                           on_aead_click=self.handle_aead)
+        self.sidebar_frame.grid(row=0, column=0, sticky="nsew")
+
+        # MainSection Frame
+        self.main_section_frame = MainSectionFrame(self)
+        self.main_section_frame.grid(row=0, column=1, sticky="nsew")
+
         # Textbox
-        self.results_textbox = Textbox(self)
-        # Input frame
-        self.input_frame = ct.CTkFrame(self, corner_radius=0)
-        self.input_frame.grid(row=1, column=1, rowspan=5, sticky="nsew")
-        self.input_frame.grid_rowconfigure(4, weight=1)
-        self.input_frame.grid_columnconfigure(1, weight=1)
+        # self.results_textbox = Textbox(self)
+        # # Input frame
+        # self.input_frame = ct.CTkFrame(self, corner_radius=0)
+        # self.input_frame.grid(row=1, column=1, rowspan=5, sticky="nsew")
+        # self.input_frame.grid_rowconfigure(4, weight=1)
+        # self.input_frame.grid_columnconfigure(1, weight=1)
 
-        # Entry plaintext
-        self.entry_pt = ct.CTkEntry(
-            self.input_frame, placeholder_text="Texto plano")
-        self.entry_pt.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
+        # # Entry plaintext
+        # self.entry_pt = ct.CTkEntry(
+        #     self.input_frame, placeholder_text="Texto plano")
+        # self.entry_pt.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
 
-        # Entry associated data
-        self.entry_ad = ct.CTkEntry(
-            self.input_frame, placeholder_text="Datos asociados")
-        self.entry_ad.grid(row=3, column=1, padx=20, pady=20, sticky="nsew")
+        # # Entry associated data
+        # self.entry_ad = ct.CTkEntry(
+        #     self.input_frame, placeholder_text="Datos asociados")
+        # self.entry_ad.grid(row=3, column=1, padx=20, pady=20, sticky="nsew")
 
-        # Cipher buttons
-        self.encrypt_button = ct.CTkButton(
-            master=self, text="Cifrar", command=self.handle_encrypt)
-        self.encrypt_button.grid(
-            row=2, column=2, padx=20, pady=20, sticky="ew")
+        # # Cipher buttons
+        # self.encrypt_button = ct.CTkButton(
+        #     master=self, text="Cifrar", command=self.handle_encrypt)
+        # self.encrypt_button.grid(
+        #     row=2, column=2, padx=20, pady=20, sticky="ew")
 
-        self.decrypt_button = ct.CTkButton(
-            master=self, text="Descifrar", command=self.handle_decrypt)
-        self.decrypt_button.grid(
-            row=3, column=2, padx=20, pady=20, sticky="ew")
+        # self.decrypt_button = ct.CTkButton(
+        #     master=self, text="Descifrar", command=self.handle_decrypt)
+        # self.decrypt_button.grid(
+        #     row=3, column=2, padx=20, pady=20, sticky="ew")
 
-        # Tab
-        self.tabview = ct.CTkTabview(self, width=250)
-        self.tabview.grid(row=0, column=2, rowspan=2, padx=(
-            20, 0), pady=(20, 0), sticky="nsew")
-        self.tabview.add("Entradas")
-        self.tabview.tab("Entradas").grid_columnconfigure(
-            0, weight=1)
+        # # Tab
+        # self.tabview = ct.CTkTabview(self, width=250)
+        # self.tabview.grid(row=0, column=2, rowspan=2, padx=(
+        #     20, 0), pady=(20, 0), sticky="nsew")
+        # self.tabview.add("Entradas")
+        # self.tabview.tab("Entradas").grid_columnconfigure(
+        #     0, weight=1)
 
-        # Variant
-        self.optionmenu_variant = ct.CTkOptionMenu(self.tabview.tab("Entradas"),
-                                                   values=["Ascon-128", "Ascon-128a", "Ascon-80pq"])
-        self.optionmenu_variant.grid(row=0, column=0, padx=20, pady=(20, 10))
-        # Key
-        self.buttonkey = ct.CTkButton(
-            self.tabview.tab("Entradas"), text="Key", command=self.handle_key_button
-        )
-        self.buttonkey.grid(row=1, column=0, padx=20, pady=20, sticky="ew")
-        # Nonce
-        self.buttonnonce = ct.CTkButton(
-            self.tabview.tab("Entradas"), text="Nonce", command=self.handle_nonce_button
-        )
-        self.buttonnonce.grid(row=2, column=0, padx=20, pady=20, sticky="ew")
+        # # Variant
+        # self.optionmenu_variant = ct.CTkOptionMenu(self.tabview.tab("Entradas"),
+        #                                            values=["Ascon-128", "Ascon-128a", "Ascon-80pq"])
+        # self.optionmenu_variant.grid(row=0, column=0, padx=20, pady=(20, 10))
+        # # Key
+        # self.buttonkey = ct.CTkButton(
+        #     self.tabview.tab("Entradas"), text="Key", command=self.handle_key_button
+        # )
+        # self.buttonkey.grid(row=1, column=0, padx=20, pady=20, sticky="ew")
+        # # Nonce
+        # self.buttonnonce = ct.CTkButton(
+        #     self.tabview.tab("Entradas"), text="Nonce", command=self.handle_nonce_button
+        # )
+        # self.buttonnonce.grid(row=2, column=0, padx=20, pady=20, sticky="ew")
 
     def window_config(self):
         self.geometry(f"{1100}x{580}")

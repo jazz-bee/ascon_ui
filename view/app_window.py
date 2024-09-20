@@ -1,7 +1,7 @@
 import customtkinter as ct
 from view.textbox import Textbox
 from view.sidebar import SidebarFrame
-from view.main_section import MainSectionFrame
+from view.encryption_section import EncryptionSectionFrame
 from controllers.ascon_controller import AsconController
 
 
@@ -28,8 +28,8 @@ class AppWindow(ct.CTk):
         self.sidebar_frame.grid(row=0, column=0, sticky="nsew")
 
         # MainSection Frame
-        self.main_section_frame = MainSectionFrame(self)
-        self.main_section_frame.grid(row=0, column=1, sticky="nsew")
+        self.encryption_section_frame = EncryptionSectionFrame(self)
+        self.encryption_section_frame.grid(row=0, column=1, sticky="nsew")
 
         # Textbox
         # self.results_textbox = Textbox(self)

@@ -2,6 +2,7 @@ import customtkinter as ct
 from view.textbox import Textbox
 from view.sidebar import SidebarFrame
 from view.encryption_section import EncryptionSectionFrame
+from view.decryption_section import DecryptionSectionFrame
 from controllers.ascon_controller import AsconController
 
 
@@ -22,17 +23,24 @@ class AppWindow(ct.CTk):
         self.window_config()
 
         # Sidebar Frame
-        self.sidebar_frame = SidebarFrame(master=self,
-                                          on_demo_click=self.handle_demo,
-                                          on_aead_click=self.handle_aead)
+        self.sidebar_frame = SidebarFrame(
+            self, self.show_encryption, self.show_decryption, self.show_results)
+
         self.sidebar_frame.grid(row=0, column=0, sticky="nsew")
 
-        # MainSection Frame
-        self.encryption_section_frame = EncryptionSectionFrame(self)
+        # Encryption Frame
+        self.encryption_section_frame = EncryptionSectionFrame(
+            self, self.handle_encrypt, self.handle_key_button, self.handle_nonce_button)
         self.encryption_section_frame.grid(row=0, column=1, sticky="nsew")
 
-        # Textbox
-        # self.results_textbox = Textbox(self)
+        # Decryption Frame
+        self.decryption_section_frame = DecryptionSectionFrame(self)
+
+        # Initially show encryption frame
+        self.current_frame = self.encryption_section_frame
+
+        Textbox
+        self.results_textbox = Textbox(self)
         # # Input frame
         # self.input_frame = ct.CTkFrame(self, corner_radius=0)
         # self.input_frame.grid(row=1, column=1, rowspan=5, sticky="nsew")
@@ -95,9 +103,8 @@ class AppWindow(ct.CTk):
         self.grid_columnconfigure(1, weight=1)  # Main Section
         self.grid_rowconfigure(0, weight=1)  # Expands
 
-    def handle_encrypt(self):
+    def handle_encrypt(self, params):
         try:
-            params = self._gather_encryption_parameters()
 
             self.ciphertext, execution_time = self.ascon_controller.encrypt_and_measure_time(
                 params)
@@ -180,13 +187,6 @@ class AppWindow(ct.CTk):
             self.results_textbox.insert_line(
                 f"Execution time (s): {execution_time:.6f} ")
 
-    # Handlers for the sidebar button clicks
-    def handle_demo(self):
-        self.results_textbox.add_title("Demo")
-
-    def handle_aead(self):
-        self.results_textbox.add_title("AEAD")
-
     def _result_print(self, data):
         # Print aligned text
         maxlen = max([len(text) for (text, val) in data])
@@ -194,13 +194,13 @@ class AppWindow(ct.CTk):
             self.results_textbox.insert_line("{text}:{align} 0x{val} ({length} bytes)".format(text=text, align=(
                 (maxlen - len(text)) * " "), val=self.ascon_controller.bytes_to_hex(val), length=len(val)))
 
-    def handle_key_button(self):
-        self._generate_random_key()
+    def handle_key_button(self, variant):
+        self._generate_random_key(variant)
         key_in_hex = self.ascon_controller.bytes_to_hex(self.key)
         self.results_textbox.insert_line(f"Key generated:  0x{key_in_hex}")
+        return self.key
 
-    def _generate_random_key(self):
-        variant = self.optionmenu_variant.get()
+    def _generate_random_key(self, variant):
         keysize = 20 if variant == "Ascon-80pq" else 16
         self.key = self.ascon_controller.get_random_key(
             keysize)
@@ -209,7 +209,31 @@ class AppWindow(ct.CTk):
         self._generate_random_nonce()
         nonce_in_hex = self.ascon_controller.bytes_to_hex(self.nonce)
         self.results_textbox.insert_line(f"Nonce generated:  0x{nonce_in_hex}")
+        return self.nonce
 
     def _generate_random_nonce(self):
         self.nonce = self.ascon_controller.get_random_nonce(
             16)  # zero_bytes(16)
+
+    def show_encryption(self):
+        # Hide current frame
+        self.current_frame.grid_forget()
+        # Show encryption frame
+        self.encryption_section_frame.grid(row=0, column=1, sticky="nsew")
+        self.current_frame = self.encryption_section_frame
+
+    def show_decryption(self):
+        # Hide current frame
+        self.current_frame.grid_forget()
+        # Show decryption frame
+        self.decryption_section_frame.grid(row=0, column=1, sticky="nsew")
+        self.current_frame = self.decryption_section_frame
+
+    def show_results(self):
+        # Hide current frame
+        self.current_frame.grid_forget()
+        # Show decryption frame
+        # self.results_textbox.grid(row=0, column=1, sticky="nsew")
+        self.results_textbox.grid(
+            row=0, column=1,  padx=20, pady=20, sticky="nsew")
+        self.current_frame = self.results_textbox

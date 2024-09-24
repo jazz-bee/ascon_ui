@@ -17,14 +17,14 @@ class MainSectionFrame(CTkFrame):
         self._setup_inputs_tab_grid()
         self.add_inputs_widgets()
 
-        # Results tab
-        self.results_tab = self.tab_control.add("Results")
-        self._setup_results_tab_grid()
+        # # Results tab
+        # self.results_tab = self.tab_control.add("Results")
+        # self._setup_results_tab_grid()
 
         # Textbox expands to fit all the space
-        self.results_textbox = CTkTextbox(self.results_tab)
-        self.results_textbox.grid(
-            row=0, column=0, columnspan=4, rowspan=1, padx=10, pady=10, sticky="nsew")
+        # self.results_textbox = Textbox(self.results_tab)
+        # self.results_textbox.grid(
+        #     row=0, column=0, columnspan=4, rowspan=1, padx=10, pady=10, sticky="nsew")
 
     def _setup_grid(self):
 
@@ -52,14 +52,14 @@ class MainSectionFrame(CTkFrame):
         self.inputs_tab.grid_rowconfigure(
             13, weight=0, minsize=40)  # Min space at the end of the window
 
-    def _setup_results_tab_grid(self):
-        # Configuring the grid in the Results tab
-        self.results_tab.grid_columnconfigure(0, weight=1)  # Column 0 expands
-        self.results_tab.grid_columnconfigure(1, weight=1)  # Column 1 expands
-        self.results_tab.grid_columnconfigure(2, weight=1)  # Column 2 expands
-        self.results_tab.grid_columnconfigure(3, weight=1)  # Column 3 expands
+    # def _setup_results_tab_grid(self):
+    #     # Configuring the grid in the Results tab
+    #     self.results_tab.grid_columnconfigure(0, weight=1)  # Column 0 expands
+    #     self.results_tab.grid_columnconfigure(1, weight=1)  # Column 1 expands
+    #     self.results_tab.grid_columnconfigure(2, weight=1)  # Column 2 expands
+    #     self.results_tab.grid_columnconfigure(3, weight=1)  # Column 3 expands
 
-        self.results_tab.grid_rowconfigure(0, weight=1)  # Row 0 expands
+    #     self.results_tab.grid_rowconfigure(0, weight=1)  # Row 0 expands
 
     def add_inputs_widgets(self):
         pass  # Meant to be overridden by child classes

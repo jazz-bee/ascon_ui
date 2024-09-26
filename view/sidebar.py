@@ -2,27 +2,27 @@ from customtkinter import CTkFrame, CTkLabel, CTkButton, CTkFont
 
 
 class SidebarFrame(CTkFrame):
-    def __init__(self, master, on_encrypt_click, on_decrypt_click, on_results_click, **kwargs):
+    def __init__(self, master, switch_frame_callback, **kwargs):
         super().__init__(master, **kwargs)
 
-        # Set up the grid
+        # Set up grid
         # Span the sidebar across all rows (rowspan needs a large number e.g. 10)
         self.grid(row=0, column=0, rowspan=10, sticky="nsew")
+        self.grid_rowconfigure(1, minsize=20)  # Row after title: empty space
+        self.grid_rowconfigure(5, weight=1)  # Expands
 
         self.logo_label = CTkLabel(
             self, text="ASCON", font=CTkFont(size=30, weight="bold"))
         self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
 
-        self.grid_rowconfigure(1, minsize=20)   # Second row is for space
-        self.grid_rowconfigure(5, weight=1)
+        self.encrypt_button = CTkButton(
+            self, text="🔐 Encrypt", font=CTkFont(weight="bold"), command=lambda: switch_frame_callback("encryption"))
+        self.encrypt_button.grid(row=2, column=0, padx=20, pady=10)
 
-        self.demo_button = CTkButton(
-            self, text="Encrypt", font=CTkFont(weight="bold"), command=on_encrypt_click).grid(row=2, column=0, padx=20, pady=10)
+        self.decrypt_button = CTkButton(
+            self, text="🔓 Decrypt", font=CTkFont(weight="bold"), command=lambda: switch_frame_callback("decryption"))
+        self.decrypt_button.grid(row=3, column=0, padx=20, pady=10)
 
-        self.aead_button = CTkButton(
-            self, text="Decrypt", font=CTkFont(weight="bold"), command=on_decrypt_click).grid(row=3, column=0, padx=20, pady=10)
-
-        self.result_button = CTkButton(
-            self, text="Results", font=CTkFont(weight="bold"), command=on_results_click).grid(row=4, column=0, padx=20, pady=10)
-        self.info_button = CTkButton(
-            self, text="About", font=CTkFont(weight="bold")).grid(row=9, column=0, padx=20, pady=10)
+        self.results_button = CTkButton(
+            self, text="📺 Results", font=CTkFont(weight="bold"), command=lambda: switch_frame_callback("results"))
+        self.results_button.grid(row=4, column=0, padx=20, pady=10)

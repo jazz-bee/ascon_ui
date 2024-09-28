@@ -1,6 +1,8 @@
 import customtkinter as ct
 from view.textbox import Textbox
 from view.sidebar import SidebarFrame
+from view.encryption_section import EncryptionSectionFrame
+from view.decryption_section import DecryptionSectionFrame
 from controllers.ascon_controller import AsconController
 
 
@@ -8,129 +10,65 @@ class AppWindow(ct.CTk):
     def __init__(self):
         super().__init__()
 
+        # Config
+        self.title("Lightweight Cryptography - ASCON UI")
+        self.window_config()
+
         self.ascon_controller = AsconController()
 
-        # initialize parameters
+        # Initialize parameters
         self.key = None
         self.nonce = None
         self.ciphertext = None
         self.received_plaintext = None
 
-        # Config
-        self.title("Criptografia - ASCON App")
-        self.window_config()
+        # Initialize frames
+        self.encryption_section_frame = EncryptionSectionFrame(
+            self, self.handle_encrypt, self.handle_key_button, self.handle_nonce_button)
+        self.decryption_section_frame = DecryptionSectionFrame(self)
+
+        # Initialize components
+        self.ascon_controller = AsconController()
+        self.results_textbox = Textbox(self)
+        self.about_window = None
+
+        # Initially show the encryption frame
+        self.current_frame = None
+        self.switch_frame("encryption")
 
         # Sidebar Frame
-        self.sidebar_frame = SidebarFrame(master=self,
-                                          on_demo_click=self.handle_demo,
-                                          on_aead_click=self.handle_aead)
-        # Textbox
-        self.results_textbox = Textbox(self)
-        # Input frame
-        self.input_frame = ct.CTkFrame(self, corner_radius=0)
-        self.input_frame.grid(row=1, column=1, rowspan=5, sticky="nsew")
-        self.input_frame.grid_rowconfigure(4, weight=1)
-        self.input_frame.grid_columnconfigure(1, weight=1)
-
-        # Entry plaintext
-        self.entry_pt = ct.CTkEntry(
-            self.input_frame, placeholder_text="Texto plano")
-        self.entry_pt.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
-
-        # Entry associated data
-        self.entry_ad = ct.CTkEntry(
-            self.input_frame, placeholder_text="Datos asociados")
-        self.entry_ad.grid(row=3, column=1, padx=20, pady=20, sticky="nsew")
-
-        # Cipher buttons
-        self.encrypt_button = ct.CTkButton(
-            master=self, text="Cifrar", command=self.handle_encrypt)
-        self.encrypt_button.grid(
-            row=2, column=2, padx=20, pady=20, sticky="ew")
-
-        self.decrypt_button = ct.CTkButton(
-            master=self, text="Descifrar", command=self.handle_decrypt)
-        self.decrypt_button.grid(
-            row=3, column=2, padx=20, pady=20, sticky="ew")
-
-        # Tab
-        self.tabview = ct.CTkTabview(self, width=250)
-        self.tabview.grid(row=0, column=2, rowspan=2, padx=(
-            20, 0), pady=(20, 0), sticky="nsew")
-        self.tabview.add("Entradas")
-        self.tabview.tab("Entradas").grid_columnconfigure(
-            0, weight=1)
-
-        # Variant
-        self.optionmenu_variant = ct.CTkOptionMenu(self.tabview.tab("Entradas"),
-                                                   values=["Ascon-128", "Ascon-128a", "Ascon-80pq"])
-        self.optionmenu_variant.grid(row=0, column=0, padx=20, pady=(20, 10))
-        # Key
-        self.buttonkey = ct.CTkButton(
-            self.tabview.tab("Entradas"), text="Key", command=self.handle_key_button
-        )
-        self.buttonkey.grid(row=1, column=0, padx=20, pady=20, sticky="ew")
-        # Nonce
-        self.buttonnonce = ct.CTkButton(
-            self.tabview.tab("Entradas"), text="Nonce", command=self.handle_nonce_button
-        )
-        self.buttonnonce.grid(row=2, column=0, padx=20, pady=20, sticky="ew")
+        self.sidebar_frame = SidebarFrame(self, self.switch_frame)
+        self.sidebar_frame.grid(row=0, column=0, sticky="nsew")
 
     def window_config(self):
         self.geometry(f"{1100}x{580}")
         self.minsize(1100, 580)
-
-        # Set grid
-        self.grid_columnconfigure(0, weight=0)
-        self.grid_columnconfigure(1, weight=1)
-        self.grid_rowconfigure(0, weight=1)
-
-        # Set appearance and theme color
-        ct.set_appearance_mode("light")  # Modes: system (default), light, dark
+        self._setup_grid()
+        ct.set_appearance_mode("light")
         ct.set_default_color_theme("dark-blue")
 
-    def handle_encrypt(self):
-        try:
-            params = self._gather_encryption_parameters()
+    def _setup_grid(self):
+        self.grid_columnconfigure(0, weight=0, minsize=170)  # Sidebar
+        self.grid_columnconfigure(1, weight=1)  # Main Section
+        self.grid_rowconfigure(0, weight=1)  # Expands
 
+    def handle_encrypt(self, params):
+        try:
             self.ciphertext, execution_time = self.ascon_controller.encrypt_and_measure_time(
                 params)
-
             self.display_encryption_results(
                 params, self.ciphertext, execution_time)
         except Exception as e:
             self.results_textbox.insert_line(f"Error during encryption - {e}")
 
-    def handle_decrypt(self):
+    def handle_decrypt(self, params):
         try:
-            decrypt_params = self._gather_decryption_parameters()
-
             self.received_plaintext, execution_time = self.ascon_controller.decrypt_and_measure_time(
-                decrypt_params)
-
+                params)
             self.display_decryption_results(
-                decrypt_params, self.received_plaintext, execution_time)
+                params, self.received_plaintext, execution_time)
         except Exception as e:
             self.results_textbox.insert_line(f"Error during decryption -  {e}")
-
-    def _gather_encryption_parameters(self):
-        # create a dict with the input parameters
-        return {
-            "key": self.key,
-            "nonce": self.nonce,
-            "plaintext": self.entry_pt.get().encode(),  # encode string to bytes object
-            "associated_data": self.entry_ad.get().encode(),
-            "variant": self.optionmenu_variant.get(),
-        }
-
-    def _gather_decryption_parameters(self):
-        return {
-            "key": self.key,
-            "nonce": self.nonce,
-            "associated_data": self.entry_ad.get().encode(),
-            "ciphertext": self.ciphertext,
-            "variant": self.optionmenu_variant.get()
-        }
 
     def display_encryption_results(self, params, ciphertext, execution_time):
         # Title depending on variant
@@ -142,7 +80,6 @@ class AppWindow(ct.CTk):
             ("Nonce", params['nonce']),
             ("Plaintext", params['plaintext']),
             ("Associated data", params['associated_data']),
-            # Exclude the tag from ciphertext
             ("Ciphertext", ciphertext[:-16]),
             ("Tag", ciphertext[-16:])  # Last 16 bytes are the tag
         ])
@@ -161,7 +98,6 @@ class AppWindow(ct.CTk):
             ("Key", params['key']),
             ("Nonce", params['nonce']),
             ("Associated data", params['associated_data']),
-            # Exclude the tag from ciphertext
             ("Ciphertext", params['ciphertext'][:-16]),
             ("Tag", params['ciphertext'][-16:])  # Last 16 bytes are the tag
         ])
@@ -174,13 +110,6 @@ class AppWindow(ct.CTk):
             self.results_textbox.insert_line(
                 f"Execution time (s): {execution_time:.6f} ")
 
-    # Handlers for the sidebar button clicks
-    def handle_demo(self):
-        self.results_textbox.add_title("Demo")
-
-    def handle_aead(self):
-        self.results_textbox.add_title("AEAD")
-
     def _result_print(self, data):
         # Print aligned text
         maxlen = max([len(text) for (text, val) in data])
@@ -188,13 +117,13 @@ class AppWindow(ct.CTk):
             self.results_textbox.insert_line("{text}:{align} 0x{val} ({length} bytes)".format(text=text, align=(
                 (maxlen - len(text)) * " "), val=self.ascon_controller.bytes_to_hex(val), length=len(val)))
 
-    def handle_key_button(self):
-        self._generate_random_key()
+    def handle_key_button(self, variant):
+        self._generate_random_key(variant)
         key_in_hex = self.ascon_controller.bytes_to_hex(self.key)
         self.results_textbox.insert_line(f"Key generated:  0x{key_in_hex}")
+        return self.key
 
-    def _generate_random_key(self):
-        variant = self.optionmenu_variant.get()
+    def _generate_random_key(self, variant):
         keysize = 20 if variant == "Ascon-80pq" else 16
         self.key = self.ascon_controller.get_random_key(
             keysize)
@@ -203,7 +132,27 @@ class AppWindow(ct.CTk):
         self._generate_random_nonce()
         nonce_in_hex = self.ascon_controller.bytes_to_hex(self.nonce)
         self.results_textbox.insert_line(f"Nonce generated:  0x{nonce_in_hex}")
+        return self.nonce
 
     def _generate_random_nonce(self):
         self.nonce = self.ascon_controller.get_random_nonce(
             16)  # zero_bytes(16)
+
+    def switch_frame(self, frame_name):
+
+        if self.current_frame:
+            self.current_frame.grid_forget()  # Hides current frame
+
+        selected_frame = {
+            "encryption": self.encryption_section_frame,
+            "decryption": self.decryption_section_frame,
+            "results": self.results_textbox
+        }.get(frame_name)
+
+        # Show the selected frame
+
+        if selected_frame:
+            selected_frame.grid(row=0, column=1, sticky="nsew")
+            self.current_frame = selected_frame
+        else:
+            print(f"No frame found for {frame_name}")

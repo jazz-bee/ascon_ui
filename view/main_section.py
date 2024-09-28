@@ -1,5 +1,4 @@
-from customtkinter import CTkFrame, CTkTabview, CTkEntry, CTkLabel, CTkTextbox, CTkOptionMenu, CTkButton, CTk
-from view.textbox import Textbox
+from customtkinter import CTkFrame
 
 
 class MainSectionFrame(CTkFrame):

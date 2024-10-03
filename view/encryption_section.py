@@ -85,10 +85,12 @@ class EncryptionSectionFrame(MainSectionFrame):
         self.ad_entry.grid(row=10, column=0, columnspan=2,
                            padx=10, pady=(0, 10), sticky="ew")
 
+        self.grid_rowconfigure(11, weight=1)
+
         # Encrypt button
-        self.cipher_button = CTkButton(
+        self.encrypt_button = CTkButton(
             self, text="Encrypt", command=self._on_encrypt_click)
-        self.cipher_button.grid(
+        self.encrypt_button.grid(
             row=12, column=0, padx=10, pady=10, sticky="nw")
 
     def _on_encrypt_click(self):

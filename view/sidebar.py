@@ -30,6 +30,8 @@ class SidebarFrame(CTkFrame):
         self.about_button = CTkButton(
             self, text="ⓘ About", font=CTkFont(weight="bold"), command=self.show_info_popup)
         self.about_button.grid(row=9, column=0, padx=20, pady=10)
+        self.grid_rowconfigure(
+            99, weight=0, minsize=20)
 
     def show_info_popup(self):
         info_window = CTkToplevel(self)

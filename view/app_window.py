@@ -25,7 +25,8 @@ class AppWindow(ct.CTk):
         # Initialize frames
         self.encryption_section_frame = EncryptionSectionFrame(
             self, self.handle_encrypt, self.handle_key_button, self.handle_nonce_button)
-        self.decryption_section_frame = DecryptionSectionFrame(self)
+        self.decryption_section_frame = DecryptionSectionFrame(
+            self, self.handle_decrypt)
 
         # Initialize components
         self.ascon_controller = AsconController()
@@ -59,7 +60,8 @@ class AppWindow(ct.CTk):
             self.display_encryption_results(
                 params, self.ciphertext, execution_time)
         except Exception as e:
-            self.results_textbox.insert_line(f"Error during encryption - {e}")
+            self.results_textbox.insert_line(
+                f"\nError during encryption - {e}")
 
     def handle_decrypt(self, params):
         try:
@@ -68,7 +70,8 @@ class AppWindow(ct.CTk):
             self.display_decryption_results(
                 params, self.received_plaintext, execution_time)
         except Exception as e:
-            self.results_textbox.insert_line(f"Error during decryption -  {e}")
+            self.results_textbox.insert_line(
+                f"\nError during decryption -  {e}")
 
     def display_encryption_results(self, params, ciphertext, execution_time):
         # Title depending on variant

@@ -3,8 +3,10 @@ from customtkinter import CTkLabel, CTkEntry, CTkOptionMenu, CTkButton
 
 
 class DecryptionSectionFrame(MainSectionFrame):
-    def __init__(self, master):
+    def __init__(self, master, decrypt_callback):
         super().__init__(master)
+
+        self.decrypt_callback = decrypt_callback
 
         # self.add_inputs_widgets()
         self.after(50, self.add_inputs_widgets)
@@ -49,14 +51,14 @@ class DecryptionSectionFrame(MainSectionFrame):
                               padx=10, pady=(0, 10), sticky="ew")
 
         # Associated data
-        self.ciphertext_label = CTkLabel(
+        self.ad_label = CTkLabel(
             self, text="Associated data", font=("Arial", 12, "bold"))
-        self.ciphertext_label.grid(row=7, column=0, columnspan=2,
-                                   padx=10, pady=(10, 0), sticky="w")
-        self.ciphertext_entry = CTkEntry(
+        self.ad_label.grid(row=7, column=0, columnspan=2,
+                           padx=10, pady=(10, 0), sticky="w")
+        self.ad_entry = CTkEntry(
             self, placeholder_text="Optional")
-        self.ciphertext_entry.grid(row=8, column=0, columnspan=2,
-                                   padx=10, pady=(0, 10), sticky="ew")
+        self.ad_entry.grid(row=8, column=0, columnspan=2,
+                           padx=10, pady=(0, 10), sticky="ew")
 
         # Ciphertext
         self.ciphertext_label = CTkLabel(
@@ -64,7 +66,7 @@ class DecryptionSectionFrame(MainSectionFrame):
         self.ciphertext_label.grid(row=9, column=0, columnspan=2,
                                    padx=10, pady=(10, 0), sticky="w")
         self.ciphertext_entry = CTkEntry(
-            self, placeholder_text="Optional")
+            self, placeholder_text="Required")
         self.ciphertext_entry.grid(row=10, column=0, columnspan=2,
                                    padx=10, pady=(0, 10), sticky="ew")
 
@@ -73,10 +75,10 @@ class DecryptionSectionFrame(MainSectionFrame):
             self, text="Tag", font=("Arial", 12, "bold"))
         self.tag_label.grid(row=11, column=0, columnspan=2,
                             padx=10, pady=(10, 0), sticky="w")
-        self.ad_entry = CTkEntry(
-            self, placeholder_text="Optional")
-        self.ad_entry.grid(row=12, column=0, columnspan=2,
-                           padx=10, pady=(0, 10), sticky="ew")
+        self.tag_entry = CTkEntry(
+            self, placeholder_text="Required")
+        self.tag_entry.grid(row=12, column=0, columnspan=2,
+                            padx=10, pady=(0, 10), sticky="ew")
 
         self.grid_rowconfigure(13, weight=1)
 
@@ -86,14 +88,42 @@ class DecryptionSectionFrame(MainSectionFrame):
         self.decrypt_button.grid(
             row=14, column=0, padx=10, pady=10, sticky="nw")
 
-    # def _gather_decryption_parameters(self):
-    #     return {
-    #         "key": self.key,
-    #         "nonce": self.nonce,
-    #         "associated_data": self.entry_ad.get().encode(),
-    #         "ciphertext": self.ciphertext,
-    #         "variant": self.optionmenu_variant.get()
-    #     }
+    def _gather_decryption_parameters(self):
+        # Create a dict with the parameters
+        try:
+            # Convert hexa to bytes
+            key = bytes.fromhex(self.key_entry.get())
+            nonce = bytes.fromhex(self.nonce_entry.get())
+            ciphertext = bytes.fromhex(self.ciphertext_entry.get())
+            tag = bytes.fromhex(self.tag_entry.get())
+        except ValueError:
+            # Handle error if user types a key that is not a valid hexa
+            raise ValueError("Invalid hexadecimal format")
+
+        # ciphertext_and_tag = self._concatenate_ciphertext_and_tag()
+
+        return {
+            "key": key,
+            "nonce": nonce,
+            "ciphertext": ciphertext+tag,
+            "associated_data": self.ad_entry.get().encode(),
+            "variant": self.optionmenu_variant.get(),
+        }
 
     def _on_decrypt_click(self):
-        pass
+        params = self._gather_decryption_parameters()
+        self.decrypt_callback(params)
+
+    # def _concatenate_ciphertext_and_tag(self):
+    #     ciphertext = self.ciphertext_entry.get()
+    #     tag = self.tag_entry.get()
+    #     try:
+    #         # Si no son válidos, lanzará una excepción
+    #         bytes_ciphertext = bytes.fromhex(ciphertext)
+    #         bytes_tag = bytes.fromhex(tag)
+    #     except ValueError:
+    #         # Si no son hexadecimales válidos, puedes manejar el error aquí
+    #         raise ValueError("Invalid hexadecimal input for ciphertext or tag")
+
+    #     concatenated_data = bytes_ciphertext + bytes_tag
+    #     return concatenated_data

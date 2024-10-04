@@ -21,12 +21,13 @@ class AppWindow(ct.CTk):
         self.nonce = None
         self.ciphertext = None
         self.received_plaintext = None
+        self.encryption_result = {}
 
         # Initialize frames
         self.encryption_section_frame = EncryptionSectionFrame(
             self, self.handle_encrypt, self.handle_key_button, self.handle_nonce_button)
         self.decryption_section_frame = DecryptionSectionFrame(
-            self, self.handle_decrypt)
+            self, self.handle_decrypt, self.get_encryption_result)
 
         # Initialize components
         self.ascon_controller = AsconController()
@@ -59,6 +60,11 @@ class AppWindow(ct.CTk):
                 params)
             self.display_encryption_results(
                 params, self.ciphertext, execution_time)
+            self.encryption_result = {
+                "params": params,
+                "ciphertext": self.ciphertext[:-16],
+                "tag": self.ciphertext[-16:]
+            }
         except Exception as e:
             self.results_textbox.insert_line(
                 f"\nError during encryption - {e}")
@@ -91,7 +97,7 @@ class AppWindow(ct.CTk):
         self.results_textbox.insert_line(
             f"Output size (bytes): {len(ciphertext)}")
         self.results_textbox.insert_line(
-            f"Execution time (s): {execution_time}")
+            f"Execution time (s): {execution_time:.6f}")
 
     def display_decryption_results(self, params, received_plaintext, execution_time):
         self.results_textbox.add_title(f"DECRYPTION: {params['variant']}")
@@ -159,3 +165,6 @@ class AppWindow(ct.CTk):
             self.current_frame = selected_frame
         else:
             print(f"No frame found for {frame_name}")
+
+    def get_encryption_result(self):
+        return self.encryption_result

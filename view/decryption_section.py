@@ -3,10 +3,11 @@ from customtkinter import CTkLabel, CTkEntry, CTkOptionMenu, CTkButton
 
 
 class DecryptionSectionFrame(MainSectionFrame):
-    def __init__(self, master, decrypt_callback):
+    def __init__(self, master, decrypt_callback, autocomplete_callback):
         super().__init__(master)
 
         self.decrypt_callback = decrypt_callback
+        self.autocomplete_callback = autocomplete_callback
 
         # self.add_inputs_widgets()
         self.after(50, self.add_inputs_widgets)
@@ -88,8 +89,14 @@ class DecryptionSectionFrame(MainSectionFrame):
         self.decrypt_button.grid(
             row=14, column=0, padx=10, pady=10, sticky="nw")
 
+        # Autocomplete button
+        self.autocomplete_button = CTkButton(
+            self, text="Autocomplete", command=self._autocomplete_fields)
+        self.autocomplete_button.grid(
+            row=14, column=1, padx=10, pady=10, sticky="nw")
+
     def _gather_decryption_parameters(self):
-        # Create a dict with the parameters
+        # Create a dict with the parameters in bytes
         try:
             # Convert hexa to bytes
             key = bytes.fromhex(self.key_entry.get())
@@ -100,13 +107,11 @@ class DecryptionSectionFrame(MainSectionFrame):
             # Handle error if user types a key that is not a valid hexa
             raise ValueError("Invalid hexadecimal format")
 
-        # ciphertext_and_tag = self._concatenate_ciphertext_and_tag()
-
         return {
             "key": key,
             "nonce": nonce,
             "ciphertext": ciphertext+tag,
-            "associated_data": self.ad_entry.get().encode(),
+            "associated_data": bytes.fromhex(self.ad_entry.get()),
             "variant": self.optionmenu_variant.get(),
         }
 
@@ -114,16 +119,16 @@ class DecryptionSectionFrame(MainSectionFrame):
         params = self._gather_decryption_parameters()
         self.decrypt_callback(params)
 
-    # def _concatenate_ciphertext_and_tag(self):
-    #     ciphertext = self.ciphertext_entry.get()
-    #     tag = self.tag_entry.get()
-    #     try:
-    #         # Si no son válidos, lanzará una excepción
-    #         bytes_ciphertext = bytes.fromhex(ciphertext)
-    #         bytes_tag = bytes.fromhex(tag)
-    #     except ValueError:
-    #         # Si no son hexadecimales válidos, puedes manejar el error aquí
-    #         raise ValueError("Invalid hexadecimal input for ciphertext or tag")
+    def _autocomplete_fields(self):
+        encryption_result = self.autocomplete_callback()
 
-    #     concatenated_data = bytes_ciphertext + bytes_tag
-    #     return concatenated_data
+        if encryption_result:
+            self.ciphertext_entry.insert(
+                0, encryption_result["ciphertext"].hex())
+            self.tag_entry.insert(0, encryption_result["tag"].hex())
+            params = encryption_result["params"]
+            self.key_entry.insert(0, params["key"].hex())
+            self.nonce_entry.insert(0, params["nonce"].hex())
+            self.ad_entry.insert(0, params["associated_data"].hex())
+        else:
+            print("No encryption results available")

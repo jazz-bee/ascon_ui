@@ -1,4 +1,4 @@
-from customtkinter import CTkEntry, CTkLabel, CTkOptionMenu, CTkButton
+from customtkinter import CTkEntry, CTkLabel, CTkOptionMenu, CTkButton, CTkSwitch
 from view.main_section import MainSectionFrame
 
 
@@ -32,6 +32,12 @@ class EncryptionSectionFrame(MainSectionFrame):
         self.optionmenu_variant.grid(row=2, column=0,
                                      padx=10, pady=(0, 10), sticky="ew")
 
+        # Debug switch
+        self.debug_switch = CTkSwitch(
+            self, text="Debug Mode", command=self._handle_debug_switch)
+        self.debug_switch.grid(row=2, column=3,
+                               padx=10, pady=(0, 10))
+
         # Key
         self.key_label = CTkLabel(
             self, text="Key:", font=("Arial", 12, "bold"))
@@ -45,7 +51,7 @@ class EncryptionSectionFrame(MainSectionFrame):
 
         # Key random button
         self.key_button = CTkButton(
-            self, text="Key", command=self.handle_key_button
+            self, text="Key", command=self._handle_key_button
         )
         self.key_button.grid(row=4, column=3, padx=10, pady=(0, 10))
 
@@ -61,7 +67,7 @@ class EncryptionSectionFrame(MainSectionFrame):
 
         # Nonce random button
         self.nonce_button = CTkButton(
-            self, text="Nonce", command=self.handle_nonce_button
+            self, text="Nonce", command=self._handle_nonce_button
         )
         self.nonce_button.grid(row=6, column=3, padx=10, pady=(0, 10))
 
@@ -115,13 +121,16 @@ class EncryptionSectionFrame(MainSectionFrame):
             "variant": self.optionmenu_variant.get(),
         }
 
-    def handle_key_button(self):
+    def _handle_key_button(self):
         variant = self.optionmenu_variant.get()
         random_key = self.generate_key_callback(variant)
         self.key_entry.delete(0, 'end')
         self.key_entry.insert(0, random_key.hex())
 
-    def handle_nonce_button(self):
+    def _handle_nonce_button(self):
         random_nonce = self.generate_nonce_callback()
         self.nonce_entry.delete(0, 'end')
         self.nonce_entry.insert(0, random_nonce.hex())
+
+    def _handle_debug_switch(self):
+        pass

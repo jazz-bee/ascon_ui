@@ -170,6 +170,4 @@ class AppWindow(ct.CTk):
         return self.encryption_result
 
     def handle_debug_mode(self, debug_value):
-        # pass
-        # call controller
-        print("aca")
+        self.ascon_controller.set_debug_mode(debug_value)

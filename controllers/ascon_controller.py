@@ -28,6 +28,10 @@ class AsconController:
                                                                     params['key'], params['nonce'], params['associated_data'], params['ciphertext'], params['variant'])
         return received_plaintext, execution_time
 
+    def set_debug_mode(self, debug_value):
+        ascon.debug = debug_value
+        # ascon.debugpermutation=debug_value
+
     def _validate_encryption_parameters(self, params):
         required_params = {
             'key': bytes,

@@ -20,7 +20,7 @@ class EncryptionSectionFrame(MainSectionFrame):
         self.title_label = CTkLabel(
             self, text="Encryption parameters", font=("Arial", 18, "bold"))
         self.title_label.grid(row=0, column=0, columnspan=3,
-                              padx=10, pady=(10, 0), sticky="w")
+                              padx=10, pady=(20, 0), sticky="w")
 
         # Variant
         self.variant_label = CTkLabel(
@@ -85,10 +85,12 @@ class EncryptionSectionFrame(MainSectionFrame):
         self.ad_entry.grid(row=10, column=0, columnspan=2,
                            padx=10, pady=(0, 10), sticky="ew")
 
+        self.grid_rowconfigure(11, weight=1)  # expands
+
         # Encrypt button
-        self.cipher_button = CTkButton(
+        self.encrypt_button = CTkButton(
             self, text="Encrypt", command=self._on_encrypt_click)
-        self.cipher_button.grid(
+        self.encrypt_button.grid(
             row=12, column=0, padx=10, pady=10, sticky="nw")
 
     def _on_encrypt_click(self):
@@ -101,9 +103,9 @@ class EncryptionSectionFrame(MainSectionFrame):
             # Convert hexa to bytes
             key = bytes.fromhex(self.key_entry.get())
             nonce = bytes.fromhex(self.nonce_entry.get())
-        except ValueError:
+        except ValueError as e:
             # Handle error if user types a key that is not a valid hexa
-            raise ValueError("Invalid hexadecimal key/nonce format")
+            raise ValueError("Invalid hexadecimal key/nonce format") from e
 
         return {
             "key": key,

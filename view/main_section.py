@@ -16,10 +16,10 @@ class MainSectionFrame(CTkFrame):
         self.grid_columnconfigure(2, weight=0)
         self.grid_columnconfigure(3, weight=0, minsize=250)
 
-        self.grid_rowconfigure(0, weight=1)     # Row 0 expands vertically
-        self.grid_rowconfigure(11, weight=1)  # Row expands
+        self.grid_rowconfigure(0, minsize=50)     # Row 0 with minsize
+        # self.grid_rowconfigure(11, weight=1)  # Row expands
         self.grid_rowconfigure(
-            13, weight=0, minsize=40)  # Min space at the end of the window
+            99, weight=0, minsize=20)  # Min space at the end of the window
 
     def add_inputs_widgets(self):
         pass  # Meant to be overridden by child classes

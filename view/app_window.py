@@ -25,7 +25,7 @@ class AppWindow(ct.CTk):
 
         # Initialize frames
         self.encryption_section_frame = EncryptionSectionFrame(
-            self, self.handle_encrypt, self.handle_key_button, self.handle_nonce_button)
+            self, self.handle_encrypt, self.handle_key_button, self.handle_nonce_button, self.handle_debug_mode)
         self.decryption_section_frame = DecryptionSectionFrame(
             self, self.handle_decrypt, self.get_encryption_result)
 
@@ -168,3 +168,8 @@ class AppWindow(ct.CTk):
 
     def get_encryption_result(self):
         return self.encryption_result
+
+    def handle_debug_mode(self, debug_value):
+        # pass
+        # call controller
+        print("aca")

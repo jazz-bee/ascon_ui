@@ -3,12 +3,13 @@ from view.main_section import MainSectionFrame
 
 
 class EncryptionSectionFrame(MainSectionFrame):
-    def __init__(self, master, encrypt_callback, generate_key_callback, generate_nonce_callback):
+    def __init__(self, master, encrypt_callback, generate_key_callback, generate_nonce_callback, debug_callback):
         super().__init__(master)
 
         self.encrypt_callback = encrypt_callback
         self.generate_key_callback = generate_key_callback
         self.generate_nonce_callback = generate_nonce_callback
+        self.debug_callback = debug_callback
 
         # Delay widget creation to ensure main window has loaded fully,
         # Prevents rendering issues with CTkEntry
@@ -133,4 +134,4 @@ class EncryptionSectionFrame(MainSectionFrame):
         self.nonce_entry.insert(0, random_nonce.hex())
 
     def _handle_debug_switch(self):
-        pass
+        self.debug_callback(self.debug_switch.get())

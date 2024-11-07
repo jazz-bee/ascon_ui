@@ -9,7 +9,6 @@ class DecryptionSectionFrame(MainSectionFrame):
         self.decrypt_callback = decrypt_callback
         self.autocomplete_callback = autocomplete_callback
 
-        # self.add_inputs_widgets()
         self.after(50, self.add_inputs_widgets)
 
     def add_inputs_widgets(self):
@@ -18,7 +17,7 @@ class DecryptionSectionFrame(MainSectionFrame):
         self.label_key = CTkLabel(
             self, text="Decryption parameters", font=("Arial", 18, "bold"))
         self.label_key.grid(row=0, column=0, columnspan=3,
-                            padx=10, pady=(10, 0), sticky="w")
+                            padx=10, pady=(20, 0), sticky="w")
 
         # Variant
         self.variant_label = CTkLabel(
@@ -81,7 +80,7 @@ class DecryptionSectionFrame(MainSectionFrame):
         self.tag_entry.grid(row=12, column=0, columnspan=2,
                             padx=10, pady=(0, 10), sticky="ew")
 
-        self.grid_rowconfigure(13, weight=1)
+        self.grid_rowconfigure(13, weight=1)  # expands
 
         # Decrypt button
         self.decrypt_button = CTkButton(
@@ -103,9 +102,9 @@ class DecryptionSectionFrame(MainSectionFrame):
             nonce = bytes.fromhex(self.nonce_entry.get())
             ciphertext = bytes.fromhex(self.ciphertext_entry.get())
             tag = bytes.fromhex(self.tag_entry.get())
-        except ValueError:
+        except ValueError as e:
             # Handle error if user types a key that is not a valid hexa
-            raise ValueError("Invalid hexadecimal format")
+            raise ValueError("Invalid hexadecimal format") from e
 
         return {
             "key": key,

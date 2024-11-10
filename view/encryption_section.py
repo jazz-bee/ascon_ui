@@ -3,20 +3,18 @@ from view.main_section import MainSectionFrame
 
 
 class EncryptionSectionFrame(MainSectionFrame):
-    def __init__(self, master, encrypt_callback, generate_key_callback, generate_nonce_callback, debug_callback):
+    def __init__(self, master, encrypt_callback, generate_key_callback, generate_nonce_callback):
         super().__init__(master)
 
         self.encrypt_callback = encrypt_callback
         self.generate_key_callback = generate_key_callback
         self.generate_nonce_callback = generate_nonce_callback
-        self.debug_callback = debug_callback
 
         # Delay widget creation to ensure main window has loaded fully,
         # Prevents rendering issues with CTkEntry
         self.after(50, self.add_inputs_widgets)
 
     def add_inputs_widgets(self):
-
         # Title
         self.title_label = CTkLabel(
             self, text="Encryption parameters", font=("Arial", 18, "bold"))
@@ -35,7 +33,7 @@ class EncryptionSectionFrame(MainSectionFrame):
 
         # Debug switch
         self.debug_switch = CTkSwitch(
-            self, text="Debug Mode", command=self._handle_debug_switch)
+            self, text="Debug Mode")
         self.debug_switch.grid(row=2, column=3,
                                padx=10, pady=(0, 10))
 
@@ -96,11 +94,11 @@ class EncryptionSectionFrame(MainSectionFrame):
 
         # Encrypt button
         self.encrypt_button = CTkButton(
-            self, text="Encrypt", command=self._on_encrypt_click)
+            self, text="Encrypt", command=self._handle_encrypt_button)
         self.encrypt_button.grid(
             row=12, column=0, padx=10, pady=10, sticky="nw")
 
-    def _on_encrypt_click(self):
+    def _handle_encrypt_button(self):
         params = self._gather_encryption_parameters()
         self.encrypt_callback(params)
 
@@ -133,5 +131,5 @@ class EncryptionSectionFrame(MainSectionFrame):
         self.nonce_entry.delete(0, 'end')
         self.nonce_entry.insert(0, random_nonce.hex())
 
-    def _handle_debug_switch(self):
-        self.debug_callback(self.debug_switch.get())
+    def get_debug_switch_value(self):
+        return self.debug_switch.get()

@@ -87,7 +87,7 @@ class AppWindow(ct.CTk):
 
     def _handle_debug_output(self):
         if self._debug_mode_enabled():
-            debug_result = self.ascon_controller.get_ascon_debug_output()
+            debug_result = self.ascon_controller.get_debug_output()
             self.results_textbox.add_title(
                 "DEBUG MODE: Ascon state (S)")
             self.results_textbox.insert_line(debug_result)

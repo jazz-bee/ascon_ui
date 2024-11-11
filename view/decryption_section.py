@@ -91,7 +91,7 @@ class DecryptionSectionFrame(MainSectionFrame):
         self.autocomplete_button = CTkButton(
             self, text="Autocomplete", command=self._autocomplete_fields)
         self.autocomplete_button.grid(
-            row=14, column=1, padx=10, pady=10, sticky="nw")
+            row=4, column=3, padx=10, pady=(0, 10))
 
     def _gather_decryption_parameters(self):
         # Create a dict with the parameters in bytes
@@ -121,12 +121,15 @@ class DecryptionSectionFrame(MainSectionFrame):
         encryption_result = self.autocomplete_callback()
 
         if encryption_result:
-            self.ciphertext_entry.insert(
-                0, encryption_result["ciphertext"].hex())
-            self.tag_entry.insert(0, encryption_result["tag"].hex())
-            params = encryption_result["params"]
-            self.key_entry.insert(0, params["key"].hex())
-            self.nonce_entry.insert(0, params["nonce"].hex())
-            self.ad_entry.insert(0, params["associated_data"].hex())
+            fields = {
+                self.ciphertext_entry: encryption_result["ciphertext"].hex(),
+                self.tag_entry: encryption_result["tag"].hex(),
+                self.key_entry: encryption_result["params"]["key"].hex(),
+                self.nonce_entry: encryption_result["params"]["nonce"].hex(),
+                self.ad_entry: encryption_result["params"]["associated_data"].hex(),
+            }
+            for entry, value in fields.items():
+                entry.delete(0, 'end')
+                entry.insert(0, value)
         else:
             print("No encryption results available")  # TODO

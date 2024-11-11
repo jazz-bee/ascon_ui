@@ -1,4 +1,5 @@
 import customtkinter as ct
+from tkinter import PhotoImage
 from view.textbox import Textbox
 from view.sidebar import SidebarFrame
 from view.encryption_section import EncryptionSectionFrame
@@ -13,6 +14,7 @@ class AppWindow(ct.CTk):
         # Config
         self.title("Lightweight Cryptography - ASCON UI")
         self._window_config()
+        self._set_icon()
 
         # Initialize parameters
         self.key = None
@@ -46,11 +48,16 @@ class AppWindow(ct.CTk):
         self._setup_grid()
         ct.set_appearance_mode("light")
         ct.set_default_color_theme("dark-blue")
+        self.iconbitmap("assets/icon-mac.icns")
 
     def _setup_grid(self):
         self.grid_columnconfigure(0, weight=0, minsize=170)  # Sidebar
         self.grid_columnconfigure(1, weight=1)  # Main Section
         self.grid_rowconfigure(0, weight=1)  # Expands
+
+    def _set_icon(self):
+        icon = PhotoImage(file="assets/icon.png")
+        self.iconphoto(False, icon)
 
     def handle_encrypt(self, params):
         try:

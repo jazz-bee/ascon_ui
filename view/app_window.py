@@ -12,9 +12,7 @@ class AppWindow(ct.CTk):
 
         # Config
         self.title("Lightweight Cryptography - ASCON UI")
-        self.window_config()
-
-        self.ascon_controller = AsconController()
+        self._window_config()
 
         # Initialize parameters
         self.key = None
@@ -42,7 +40,7 @@ class AppWindow(ct.CTk):
         self.sidebar_frame = SidebarFrame(self, self.switch_frame)
         self.sidebar_frame.grid(row=0, column=0, sticky="nsew")
 
-    def window_config(self):
+    def _window_config(self):
         self.geometry(f"{1100}x{580}")
         self.minsize(1100, 580)
         self._setup_grid()
@@ -56,30 +54,58 @@ class AppWindow(ct.CTk):
 
     def handle_encrypt(self, params):
         try:
+            self._prepare_debug_mode()
             self.ciphertext, execution_time = self.ascon_controller.encrypt_and_measure_time(
                 params)
-            self.display_encryption_results(
+            self._store_and_display_encryption_results(
                 params, self.ciphertext, execution_time)
-            self.encryption_result = {
-                "params": params,
-                "ciphertext": self.ciphertext[:-16],
-                "tag": self.ciphertext[-16:]
-            }
+            self._handle_debug_output()
         except Exception as e:
-            self.results_textbox.insert_line(
-                f"\nError during encryption - {e}")
+            self._handle_encryption_error(e)
+
+    def _handle_encryption_error(self, e):
+        self.results_textbox.insert_line(
+            f"\n- ERROR DURING ENCRYPTION - {e}")
+
+    def _prepare_debug_mode(self):
+        debug_mode = self._debug_mode_enabled()
+        self.ascon_controller.set_debug_mode(debug_mode)
+
+    def _perform_encryption(self, params):
+        self.ciphertext, execution_time = self.ascon_controller.encrypt_and_measure_time(
+            params)
+        self._display_encryption_results(
+            params, self.ciphertext, execution_time)
+
+    def _store_and_display_encryption_results(self, params, ciphertext, execution_time):
+        self._display_encryption_results(params, ciphertext, execution_time)
+        self.encryption_result = {
+            "params": params,
+            "ciphertext": ciphertext[:-16],
+            "tag": ciphertext[-16:]
+        }
+
+    def _handle_debug_output(self):
+        if self._debug_mode_enabled():
+            debug_result = self.ascon_controller.get_debug_output()
+            self.results_textbox.add_title(
+                "DEBUG MODE: Ascon state (S)")
+            self.results_textbox.insert_line(debug_result)
+
+    def _debug_mode_enabled(self):
+        return self.encryption_section_frame.get_debug_switch_value()
 
     def handle_decrypt(self, params):
         try:
             self.received_plaintext, execution_time = self.ascon_controller.decrypt_and_measure_time(
                 params)
-            self.display_decryption_results(
+            self._display_decryption_results(
                 params, self.received_plaintext, execution_time)
         except Exception as e:
             self.results_textbox.insert_line(
-                f"\nError during decryption -  {e}")
+                f"\n- ERROR DURING DECRYPTION -  {e}")
 
-    def display_encryption_results(self, params, ciphertext, execution_time):
+    def _display_encryption_results(self, params, ciphertext, execution_time):
         # Title depending on variant
         self.results_textbox.add_title(f"ENCRYPTION: {params['variant']}")
 
@@ -99,7 +125,7 @@ class AppWindow(ct.CTk):
         self.results_textbox.insert_line(
             f"Execution time (s): {execution_time:.6f}")
 
-    def display_decryption_results(self, params, received_plaintext, execution_time):
+    def _display_decryption_results(self, params, received_plaintext, execution_time):
         self.results_textbox.add_title(f"DECRYPTION: {params['variant']}")
 
         # Print the decryption params and output

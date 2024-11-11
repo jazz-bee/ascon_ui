@@ -12,7 +12,6 @@ class DecryptionSectionFrame(MainSectionFrame):
         self.after(50, self.add_inputs_widgets)
 
     def add_inputs_widgets(self):
-
         # Title
         self.label_key = CTkLabel(
             self, text="Decryption parameters", font=("Arial", 18, "bold"))
@@ -84,7 +83,7 @@ class DecryptionSectionFrame(MainSectionFrame):
 
         # Decrypt button
         self.decrypt_button = CTkButton(
-            self, text="Decrypt", command=self._on_decrypt_click)
+            self, text="Decrypt", command=self._handle_decrypt_button)
         self.decrypt_button.grid(
             row=14, column=0, padx=10, pady=10, sticky="nw")
 
@@ -114,7 +113,7 @@ class DecryptionSectionFrame(MainSectionFrame):
             "variant": self.optionmenu_variant.get(),
         }
 
-    def _on_decrypt_click(self):
+    def _handle_decrypt_button(self):
         params = self._gather_decryption_parameters()
         self.decrypt_callback(params)
 
@@ -130,4 +129,4 @@ class DecryptionSectionFrame(MainSectionFrame):
             self.nonce_entry.insert(0, params["nonce"].hex())
             self.ad_entry.insert(0, params["associated_data"].hex())
         else:
-            print("No encryption results available")
+            print("No encryption results available")  # TODO

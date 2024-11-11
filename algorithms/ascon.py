@@ -7,6 +7,7 @@ http://ascon.iaik.tugraz.at/
 
 debug = False
 debugpermutation = False
+debug_output = []
 
 # === Ascon hash/xof ===
 
@@ -476,17 +477,38 @@ def bytes_to_hex(b):
 
 
 def printstate(S, description=""):
-    print(" " + description)
-    print(" ".join(["{s:016x}".format(s=s) for s in S]))
+    """Modified to capture instead of printing"""
+    # print(" " + description)
+    # print(" ".join(["{s:016x}".format(s=s) for s in S]))
+    debug_output.append(f" {description}")
+    debug_output.append(" ".join([f"{s:016x}" for s in S]))
 
 
 def printwords(S, description=""):
-    print(" " + description)
-    print("\n".join(["  x{i}={s:016x}".format(**locals())
-          for i, s in enumerate(S)]))
+    """Modified to capture instead of printing"""
+    # print(" " + description)
+    # print("\n".join(["  x{i}={s:016x}".format(**locals())
+    #       for i, s in enumerate(S)]))
+    debug_output.append(f" {description}")
+    for i, s in enumerate(S):
+        debug_output.append(f"  x{i}={s:016x}")
 
+
+def get_debug_output():
+    return "\n".join(debug_output)
+
+
+def set_debug_mode(value):
+    global debug
+    debug = value
+
+
+def clear_debug_output():
+    global debug_output
+    debug_output.clear()
 
 # === some demo if called directly ===
+
 
 def demo_print(data):
     maxlen = max([len(text) for (text, val) in data])

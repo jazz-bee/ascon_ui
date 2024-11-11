@@ -6,27 +6,41 @@ class AsconController:
 
     def encrypt(self, params):
         self._validate_encryption_parameters(params)
+        ascon.clear_debug_output()
         ciphertext_tag = ascon.ascon_encrypt(
             params['key'], params['nonce'], params['associated_data'], params['plaintext'], params['variant'])
         return ciphertext_tag
 
     def encrypt_and_measure_time(self, params):
         self._validate_encryption_parameters(params)
+        ascon.clear_debug_output()
         ciphertext_tag, execution_time = measure_execution_time(ascon.ascon_encrypt,
                                                                 params['key'], params['nonce'], params['associated_data'], params['plaintext'], params['variant'])
         return ciphertext_tag, execution_time
 
     def decrypt(self, params):
         self._validate_decryption_parameters(params)
+        ascon.clear_debug_output()
         received_plaintext = ascon.ascon_decrypt(
             params['key'], params['nonce'], params['associated_data'], params['ciphertext'], params['variant'])
         return received_plaintext
 
     def decrypt_and_measure_time(self, params):
         self._validate_decryption_parameters(params)
-        received_plaintext, execution_time = measure_execution_time(ascon.ascon_decrypt,
-                                                                    params['key'], params['nonce'], params['associated_data'], params['ciphertext'], params['variant'])
+        ascon.clear_debug_output()
+        received_plaintext, execution_time = measure_execution_time(
+            ascon.ascon_decrypt, params['key'], params['nonce'], params['associated_data'], params['ciphertext'], params['variant'])
         return received_plaintext, execution_time
+
+    def set_debug_mode(self, debug_value):
+        ascon.set_debug_mode(debug_value)
+        # ascon.debugpermutation=debug_value
+
+    def get_debug_output(self):
+        return ascon.get_debug_output()
+
+    def clear_ascon_debug_output(self):
+        ascon.clear_debug_output()
 
     def _validate_encryption_parameters(self, params):
         required_params = {

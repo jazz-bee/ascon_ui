@@ -1,4 +1,4 @@
-from customtkinter import CTkFrame, CTkLabel, CTkButton, CTkFont, CTkToplevel, CTkImage
+from customtkinter import CTkFrame, CTkLabel, CTkButton, CTkFont, CTkToplevel, CTkImage, set_appearance_mode, CTkOptionMenu
 from PIL import Image, ImageTk
 
 
@@ -23,7 +23,7 @@ class SidebarFrame(CTkFrame):
         self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 30))
 
         self.encrypt_button = CTkButton(
-            self, text="Encrypt", image=encrypt_icon, compound="left", font=CTkFont(family="Arial", weight="bold"), command=lambda: switch_frame_callback("encryption"))
+            self, text="Encrypt", image=encrypt_icon, compound="left", font=CTkFont(weight="bold"), command=lambda: switch_frame_callback("encryption"))
         self.encrypt_button.grid(row=2, column=0, padx=20, pady=10)
 
         self.decrypt_button = CTkButton(
@@ -37,20 +37,28 @@ class SidebarFrame(CTkFrame):
         # Empty space
         self.grid_rowconfigure(5, weight=1)  # Expands
 
-        self.docs_button = CTkButton(
-            self, text="Docs", image=docs_icon, compound="left", font=CTkFont(weight="bold"), command=lambda: switch_frame_callback("encryption"))
-        self.docs_button.grid(row=6, column=0, padx=20, pady=10)
+        # self.docs_button = CTkButton(
+        #     self, text="Docs", image=docs_icon, compound="left", font=CTkFont(weight="bold"), command=lambda: switch_frame_callback("encryption"))
+        # self.docs_button.grid(row=6, column=0, padx=20, pady=10)
+
+        self.theme_options = CTkOptionMenu(self, values=["Light Mode", "Dark Mode"],
+                                           command=lambda choice: set_appearance_mode("light" if choice == "Light Mode" else "dark"))
+        self.theme_options.set("Light Mode")  # Default to light mode
+        self.theme_options.grid(row=6, column=0, padx=20, pady=10)
 
         self.about_button = CTkButton(
-            self, text="About", image=about_icon, compound="left", font=CTkFont(weight="bold"), command=self.show_info_popup)
+            self, text="About", image=about_icon, compound="left", font=CTkFont(weight="bold"), command=self.show_about_popup)
         self.about_button.grid(row=7, column=0, padx=20, pady=10)
         self.grid_rowconfigure(
             99, weight=0, minsize=20)
 
-    def show_info_popup(self):
-        info_window = CTkToplevel(self)
-        info_window.title("About")
-        info_window.geometry("300x170")
+    def show_about_popup(self):
+        popup = CTkToplevel(self)
+        popup.title("About")
+        popup.geometry("300x170")
+        popup.transient(self)
+        popup.grab_set()
+
         label = CTkLabel(
-            info_window, text="ASCON UI \nImplementation of Ascon v1.2 \n\n Author: Jazmin Bernal\nPontifical Catholic University (UCA)\n Argentina \n🇦🇷🧉\n", font=("Arial", 14))
+            popup, text="ASCON UI \nImplementation of Ascon v1.2 \n\n Author: Jazmin Bernal\nPontifical Catholic University (UCA)\n Argentina \n🇦🇷🧉\n", font=("Arial", 14))
         label.pack(padx=20, pady=20)

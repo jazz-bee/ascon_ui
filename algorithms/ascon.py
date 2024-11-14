@@ -175,9 +175,11 @@ def ascon_encrypt(key, nonce, associateddata, plaintext, variant="Ascon-128"):
     """
     assert variant in ["Ascon-128", "Ascon-128a", "Ascon-80pq"]
     if variant in ["Ascon-128", "Ascon-128a"]:
-        assert (len(key) == 16 and len(nonce) == 16)
+        assert (len(key) == 16 and len(
+            nonce) == 16), f"Expected key:16 bytes, nonce:16 bytes"
     if variant == "Ascon-80pq":
-        assert (len(key) == 20 and len(nonce) == 16)
+        assert (len(key) == 20 and len(
+            nonce) == 16), f"Expected key:20 bytes, nonce:16 bytes"
     S = [0, 0, 0, 0, 0]
     k = len(key) * 8   # bits
     a = 12   # rounds
@@ -203,9 +205,11 @@ def ascon_decrypt(key, nonce, associateddata, ciphertext, variant="Ascon-128"):
     """
     assert variant in ["Ascon-128", "Ascon-128a", "Ascon-80pq"]
     if variant in ["Ascon-128", "Ascon-128a"]:
-        assert (len(key) == 16 and len(nonce) == 16 and len(ciphertext) >= 16)
+        assert (len(key) == 16 and len(nonce) == 16 and len(ciphertext)
+                >= 16), f"Expected key:16 bytes, nonce:16 bytes, tag:16 bytes"
     if variant == "Ascon-80pq":
-        assert (len(key) == 20 and len(nonce) == 16 and len(ciphertext) >= 16)
+        assert (len(key) == 20 and len(nonce) == 16 and len(ciphertext)
+                >= 16), f"Expected key:20 bytes, nonce:16 bytes, tag:16 bytes"
     S = [0, 0, 0, 0, 0]
     k = len(key) * 8  # bits
     a = 12  # rounds

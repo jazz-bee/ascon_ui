@@ -1,5 +1,8 @@
-from customtkinter import CTkFrame, CTkLabel, CTkButton, CTkFont, CTkToplevel, CTkImage, set_appearance_mode, CTkOptionMenu
+import pkg_resources
+import os
+import sys
 from PIL import Image, ImageTk
+from customtkinter import CTkFrame, CTkLabel, CTkButton, CTkFont, CTkToplevel, CTkImage, set_appearance_mode, CTkOptionMenu
 
 
 class SidebarFrame(CTkFrame):
@@ -7,13 +10,15 @@ class SidebarFrame(CTkFrame):
         super().__init__(master, **kwargs)
 
         encrypt_icon = CTkImage(Image.open(
-            "assets/encrypt.png"), size=(20, 20))
+            self.get_asset_path("encrypt.png")), size=(20, 20))
         decrypt_icon = CTkImage(Image.open(
-            "assets/decrypt.png"), size=(20, 20))
+            self.get_asset_path("decrypt.png")), size=(20, 20))
         results_icon = CTkImage(Image.open(
-            "assets/results.png"), size=(20, 20))
-        about_icon = CTkImage(Image.open("assets/about.png"), size=(15, 15))
-        docs_icon = CTkImage(Image.open("assets/docs.png"), size=(20, 20))
+            self.get_asset_path("results.png")), size=(20, 20))
+        about_icon = CTkImage(Image.open(
+            self.get_asset_path("about.png")), size=(15, 15))
+        docs_icon = CTkImage(Image.open(
+            self.get_asset_path("docs.png")), size=(20, 20))
 
         # Set up grid
         self.grid(row=0, column=0, sticky="nsew")
@@ -62,3 +67,33 @@ class SidebarFrame(CTkFrame):
         label = CTkLabel(
             popup, text="ASCON UI \nImplementation of Ascon v1.2 \n\n Author: Jazmin Bernal\nPontifical Catholic University (UCA)\n Argentina \n🇦🇷🧉\n", font=("Arial", 14))
         label.pack(padx=20, pady=20)
+
+    # def get_asset_path(self, filename):
+    #     # In bundled mode, PyInstaller unpacks resources to _MEIPASS
+    #     if getattr(sys, 'frozen', False):  # Check if we are running in a bundled app
+    #         return pkg_resources.resource_filename(__name__, os.path.join('assets', filename))
+    #     else:
+    #         # In development mode, look for assets in the root directory
+    #         return os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'assets', filename)
+
+    # def get_asset_path(self, filename):
+    #     if getattr(sys, 'frozen', False):  # If running as a frozen executable
+    #         # If in a bundled application, get the asset from the _MEIPASS folder
+    #         bundle_dir = sys._MEIPASS
+    #     else:
+    #         # Otherwise, it's in the normal project directory
+    #         # Current directory of the script
+    #         bundle_dir = os.path.dirname(os.path.abspath(__file__))
+    #         # Go up one level and into 'assets' folder
+    #         bundle_dir = os.path.join(bundle_dir, '..', 'assets')
+
+    #     return os.path.join(bundle_dir, filename)
+
+    def get_asset_path(self, filename):
+        # Check if running from a bundled PyInstaller app
+        if getattr(sys, 'frozen', False):
+            # PyInstaller sets 'frozen' when running a packaged app
+            return os.path.join(sys._MEIPASS, 'assets', filename)
+        else:
+            # In development mode, look for assets in the root directory
+            return os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'assets', filename)

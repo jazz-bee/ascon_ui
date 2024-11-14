@@ -1,3 +1,9 @@
+import os
+import sys
+from tkinter import PhotoImage
+from tkinter import Tk
+
+
 import customtkinter as ct
 from tkinter import PhotoImage
 from view.textbox import Textbox
@@ -54,9 +60,26 @@ class AppWindow(ct.CTk):
         self.grid_columnconfigure(1, weight=1)  # Main Section
         self.grid_rowconfigure(0, weight=1)  # Expands
 
+    # def _set_icon(self):
+    #     icon = PhotoImage(file="assets/icon.png")
+    #     self.iconphoto(False, icon)
+
     def _set_icon(self):
-        icon = PhotoImage(file="assets/icon.png")
-        self.iconphoto(False, icon)
+        if getattr(sys, 'frozen', False):  # Check if the app is bundled
+            if sys.platform == 'darwin':  # macOS
+                icon_path = os.path.join(
+                    sys._MEIPASS, 'assets', 'icon-mac.icns')
+                # Use .icns for macOS
+                self.iconphoto(False, PhotoImage(file=icon_path))
+            elif sys.platform == 'win32':  # Windows
+                icon_path = os.path.join(
+                    sys._MEIPASS, 'assets', 'icon-windows.ico')
+                self.iconbitmap(icon_path)  # Use .ico for Windows
+        else:
+            # Development mode (running with python3 main.py)
+            icon_path = os.path.join('assets', 'icon.png')
+            # Use .png for development
+            self.iconphoto(False, PhotoImage(file=icon_path))
 
     def handle_encrypt(self, params):
         try:

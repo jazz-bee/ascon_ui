@@ -35,7 +35,7 @@ class DecryptionSectionFrame(MainSectionFrame):
                             padx=10, pady=(10, 0), sticky="w")
 
         self.key_entry = CTkEntry(
-            self, placeholder_text="Required")
+            self, placeholder_text="Required (hex)")
         self.key_entry.grid(row=4, column=0, columnspan=2,
                             padx=10, pady=(0, 10), sticky="ew")
 
@@ -45,37 +45,37 @@ class DecryptionSectionFrame(MainSectionFrame):
         self.nonce_label.grid(row=5, column=0, columnspan=2,
                               padx=10, pady=(10, 0), sticky="w")
         self.nonce_entry = CTkEntry(
-            self, placeholder_text="Required")
+            self, placeholder_text="Required (hex)")
         self.nonce_entry.grid(row=6, column=0, columnspan=2,
                               padx=10, pady=(0, 10), sticky="ew")
 
         # Associated data
         self.ad_label = CTkLabel(
-            self, text="Associated data", font=("Arial", 12, "bold"))
+            self, text="Associated data:", font=("Arial", 12, "bold"))
         self.ad_label.grid(row=7, column=0, columnspan=2,
                            padx=10, pady=(10, 0), sticky="w")
         self.ad_entry = CTkEntry(
-            self, placeholder_text="Optional")
+            self, placeholder_text="Optional (hex)")
         self.ad_entry.grid(row=8, column=0, columnspan=2,
                            padx=10, pady=(0, 10), sticky="ew")
 
         # Ciphertext
         self.ciphertext_label = CTkLabel(
-            self, text="Ciphertext", font=("Arial", 12, "bold"))
+            self, text="Ciphertext:", font=("Arial", 12, "bold"))
         self.ciphertext_label.grid(row=9, column=0, columnspan=2,
                                    padx=10, pady=(10, 0), sticky="w")
         self.ciphertext_entry = CTkEntry(
-            self, placeholder_text="Required")
+            self, placeholder_text="Required (hex)")
         self.ciphertext_entry.grid(row=10, column=0, columnspan=2,
                                    padx=10, pady=(0, 10), sticky="ew")
 
         # Tag
         self.tag_label = CTkLabel(
-            self, text="Tag", font=("Arial", 12, "bold"))
+            self, text="Tag:", font=("Arial", 12, "bold"))
         self.tag_label.grid(row=11, column=0, columnspan=2,
                             padx=10, pady=(10, 0), sticky="w")
         self.tag_entry = CTkEntry(
-            self, placeholder_text="Required")
+            self, placeholder_text="Required (hex)")
         self.tag_entry.grid(row=12, column=0, columnspan=2,
                             padx=10, pady=(0, 10), sticky="ew")
 
@@ -87,11 +87,22 @@ class DecryptionSectionFrame(MainSectionFrame):
         self.decrypt_button.grid(
             row=14, column=0, padx=10, pady=10, sticky="nw")
 
+        self.error_label = CTkLabel(self, text="", text_color="red")
+        self.error_label.grid(row=14, column=1, padx=10, pady=5, sticky="w")
+
         # Autocomplete button
         self.autocomplete_button = CTkButton(
-            self, text="Autocomplete", command=self._autocomplete_fields)
+            self, text="Autocomplete", fg_color="transparent", border_width=2, text_color=("gray10", "#DCE4EE"), command=self._autocomplete_fields)
         self.autocomplete_button.grid(
             row=4, column=3, padx=10, pady=(0, 10))
+
+    def _handle_decrypt_button(self):
+        try:
+            params = self._gather_decryption_parameters()
+            self.error_label.configure(text="")
+            self.decrypt_callback(params)
+        except ValueError as e:
+            self.error_label.configure(text=str(e))
 
     def _gather_decryption_parameters(self):
         # Create a dict with the parameters in bytes
@@ -103,7 +114,8 @@ class DecryptionSectionFrame(MainSectionFrame):
             tag = bytes.fromhex(self.tag_entry.get())
         except ValueError as e:
             # Handle error if user types a key that is not a valid hexa
-            raise ValueError("Invalid hexadecimal format") from e
+            raise ValueError(
+                "Invalid hexadecimal format") from e
 
         return {
             "key": key,
@@ -112,10 +124,6 @@ class DecryptionSectionFrame(MainSectionFrame):
             "associated_data": bytes.fromhex(self.ad_entry.get()),
             "variant": self.optionmenu_variant.get(),
         }
-
-    def _handle_decrypt_button(self):
-        params = self._gather_decryption_parameters()
-        self.decrypt_callback(params)
 
     def _autocomplete_fields(self):
         encryption_result = self.autocomplete_callback()

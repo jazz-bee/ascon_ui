@@ -48,7 +48,6 @@ class AppWindow(ct.CTk):
         self._setup_grid()
         ct.set_appearance_mode("light")
         ct.set_default_color_theme("dark-blue")
-        self.iconbitmap("assets/icon-mac.icns")
 
     def _setup_grid(self):
         self.grid_columnconfigure(0, weight=0, minsize=170)  # Sidebar
@@ -67,12 +66,12 @@ class AppWindow(ct.CTk):
             self._store_and_display_encryption_results(
                 params, self.ciphertext, execution_time)
             self._handle_debug_output()
-        except Exception as e:
+        except AssertionError as e:
             self._handle_encryption_error(e)
 
     def _handle_encryption_error(self, e):
         self.results_textbox.insert_line(
-            f"\n- ERROR DURING ENCRYPTION - {e}")
+            f"ERROR DURING ENCRYPTION: Invalid key or nonce size. {e}\n")
 
     def _prepare_debug_mode(self):
         debug_mode = self._debug_mode_enabled()
@@ -108,16 +107,19 @@ class AppWindow(ct.CTk):
                 params)
             self._display_decryption_results(
                 params, self.received_plaintext, execution_time)
-        except Exception as e:
-            self.results_textbox.insert_line(
-                f"\n- ERROR DURING DECRYPTION -  {e}")
+        except AssertionError as e:
+            self._handle_decryption_error(e)
+
+    def _handle_decryption_error(self, e):
+        self.results_textbox.insert_line(
+            f"ERROR DURING DECRYPTION: Invalid input. {e}\n")
 
     def _display_encryption_results(self, params, ciphertext, execution_time):
         # Title depending on variant
         self.results_textbox.add_title(f"ENCRYPTION: {params['variant']}")
 
         # Print the input params and ascon output
-        self._result_print([
+        self._result_print_in_hex([
             ("Key", params['key']),
             ("Nonce", params['nonce']),
             ("Plaintext", params['plaintext']),
@@ -136,23 +138,24 @@ class AppWindow(ct.CTk):
         self.results_textbox.add_title(f"DECRYPTION: {params['variant']}")
 
         # Print the decryption params and output
-        self._result_print([
+        self._result_print_in_hex([
             ("Key", params['key']),
             ("Nonce", params['nonce']),
             ("Associated data", params['associated_data']),
             ("Ciphertext", params['ciphertext'][:-16]),
-            ("Tag", params['ciphertext'][-16:])  # Last 16 bytes are the tag
+            ("Tag", params['ciphertext'][-16:]),  # Last 16 bytes are the tag
         ])
 
         if received_plaintext is None:
-            self.results_textbox.insert_line("It was not possible to decipher")
+            self.results_textbox.insert_line(
+                "None - NOT POSSIBLE TO DECIPHER\n")
         else:
             self.results_textbox.insert_line(
-                f"Received plaintext (str): {received_plaintext.decode()}")
+                f"Received plaintext: {received_plaintext.decode()}")
             self.results_textbox.insert_line(
                 f"Execution time (s): {execution_time:.6f} ")
 
-    def _result_print(self, data):
+    def _result_print_in_hex(self, data):
         # Print aligned text
         maxlen = max([len(text) for (text, val) in data])
         for text, val in data:
